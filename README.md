@@ -6,11 +6,19 @@ For additional reference information, please refer to the [processor datasheet](
 
 # Getting Started
 
+This project is designed to be included in your project as a git "submodule", which will cause a copy of this repo to be downloaded into your project so it can be compiled like normal, but it doesn't add those files to your project's source control. This makes it easier to keep a common set of code in sync between multiple projects without error-prone copy/pasting.
+
 In your own repository, run:
 
-`git submodule add https://github.com/DaelonSuzuka/K42-Peripheral-Libraries`
+```
+git submodule add https://github.com/DaelonSuzuka/K42-Peripheral-Libraries src/peripherals
+```
 
-Note, when you `git clone` your own repo that contains submodules, you will also need to run `git submodule update --init --recursive` in order to also download any submodules that are in your repo.
+This should add the submodule info to your git repository, and download the code to `src/peripherals`.
+
+Once the repo is downloaded, you should be able to use it in your own code by simply `#include`ing the desired header.
+
+Note: when you `git clone` your own repo that contains submodules, you will also need to run `git submodule update --init --recursive` in order to also download any submodules that are in your repo.
 
 # Peripheral Libraries
 
