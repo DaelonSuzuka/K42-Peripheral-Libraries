@@ -4,6 +4,14 @@ A set of libraries for using the hardware peripherals in PIC18FxxK42 microcontro
 
 For additional reference information, please refer to the [processor datasheet](http://ww1.microchip.com/downloads/en/DeviceDoc/PIC18LF26-27-45-46-47-55-56-57K42-Data-Sheet-40001919E.pdf).
 
+# Getting Started
+
+In your own repository, run:
+
+`git submodule add https://github.com/DaelonSuzuka/K42-Peripheral-Libraries`
+
+Note, when you `git clone` your own repo that contains submodules, you will also need to run `git submodule update --init --recursive` in order to also download any submodules that are in your repo.
+
 # Peripheral Libraries
 
 To prevent myself from writing stupid code with bad abstractions, I've only written drivers for peripherals that I've actually used in production code.
