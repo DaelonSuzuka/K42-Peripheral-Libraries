@@ -1,5 +1,5 @@
 #include "interrupt.h"
-#include "os/system_time.h"
+#include "os/system_clock.h"
 #include "peripherals/pps.h"
 #include "pic_header.h"
 #include "uart.h"
