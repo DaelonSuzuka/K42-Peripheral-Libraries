@@ -47,7 +47,7 @@ There peripherals do not yet have drivers (datasheet chapter order):
  - Peripheral Module Disable(ch. 19)
  - Capture/Compare/PWM Module(ch. 23)
  - Complementary Waveform Generator(ch. 26)
- - Numerically Controller Oscillator(ch. 28)
+ - Numerically Controlled Oscillator(ch. 28)
  - Zero-Cross Detection Module(ch. 29)
  - Data Signal Modulator(ch. 30)
  - SPI(ch. 32)
@@ -55,6 +55,6 @@ There peripherals do not yet have drivers (datasheet chapter order):
  - Digital-to-Analog Converter(ch. 37)
  - Comparator(ch. 38)
 
-# Details on indiviual drivers
+# Details on individual drivers
 
 coming soon
