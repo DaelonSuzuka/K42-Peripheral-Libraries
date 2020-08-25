@@ -48,6 +48,7 @@ There peripherals do not yet have drivers (datasheet chapter order):
  - Direct Memory Access(ch. 15)
  - Peripheral Module Disable(ch. 19)
  - Capture/Compare/PWM Module(ch. 23)
+ - Pulse-Width Modulation(ch. 24)
  - Complementary Waveform Generator(ch. 26)
  - Zero-Cross Detection Module(ch. 29)
  - Data Signal Modulator(ch. 30)
