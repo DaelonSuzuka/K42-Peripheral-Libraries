@@ -1,6 +1,6 @@
 #include "adc.h"
-#include "pic_header.h"
 #include "fixed_voltage_reference.h"
+#include "pic_header.h"
 
 /* ************************************************************************** */
 
@@ -20,10 +20,86 @@ void adc_init(void) {
 
 /* -------------------------------------------------------------------------- */
 
-#define NUM_OF_CHANNELS 2
+//
+#ifdef LATF
+#define NUM_OF_CHANNELS 47 + 1
+#elif defined LATD
+#define NUM_OF_CHANNELS 34 + 1
+#else
+#define NUM_OF_CHANNELS 23 + 1
+#endif
+
+//
 #define _1024mV FVR_GAIN_1X
 #define _2048mV FVR_GAIN_2X
 #define _4096mV FVR_GAIN_4X
+
+// store the voltage setting per ADC channel
+static uint8_t maxVoltage[NUM_OF_CHANNELS] = {
+    _4096mV, // 0
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+
+    _4096mV, // 5
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+
+    _4096mV, // 10
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+
+    _4096mV, // 15
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+
+    _4096mV, // 20
+    _4096mV, //
+    _4096mV, //
+    _4096mV, // 23
+
+#ifdef LATD
+    _4096mV, // 24
+
+    _4096mV, // 25
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+
+    _4096mV, // 30
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+    _4096mV, // 34
+#endif
+
+#ifdef LATF
+    _4096mV, // 35
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+
+    _4096mV, // 40
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+    _4096mV, //
+
+    _4096mV, // 45
+    _4096mV, //
+    _4096mV, //
+    _4096mV, // 48
+#endif
+};
 
 #define adc_select_channel(channel) ADPCH = channel
 
@@ -46,8 +122,6 @@ uint16_t adc_convert(uint8_t channel, uint8_t scale) {
 /* -------------------------------------------------------------------------- */
 
 uint16_t adc_read(uint8_t channel) {
-    static uint8_t maxVoltage[NUM_OF_CHANNELS] = {_4096mV, _1024mV};
-
     uint16_t measurement = 0;
 
     while (1) {
