@@ -22,7 +22,7 @@ void adc_init(void) {
 
 //
 #ifdef LATF
-#define NUM_OF_CHANNELS 47 + 1
+#define NUM_OF_CHANNELS 48 + 1
 #elif defined LATD
 #define NUM_OF_CHANNELS 34 + 1
 #else
