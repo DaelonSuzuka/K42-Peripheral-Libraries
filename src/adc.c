@@ -4,11 +4,18 @@
 
 /* ************************************************************************** */
 
+#define ADREF_NREF_EXT 1
+#define ADREF_NREF_VSS 0
+
+#define ADREF_PREF_FVR 0b11
+#define ADREF_PREF_EXT 0b10
+#define ADREF_PREF_VDD 0b00
+
 void adc_init(void) {
     fvr_enable();
 
-    ADREFbits.NREF = 0;    // Negative Voltage Reference, set to Vss
-    ADREFbits.PREF = 0b11; // Positive Voltage Reference, set to FVR
+    ADREFbits.NREF = ADREF_NREF_VSS;
+    ADREFbits.PREF = ADREF_PREF_VDD;
 
     ADCON0bits.FM = 1; // adc result is right-justified
 
@@ -29,10 +36,18 @@ void adc_init(void) {
 #define NUM_OF_CHANNELS 23 + 1
 #endif
 
+typedef enum {
+    _1024mV = FVR_GAIN_1X,
+    _2048mV = FVR_GAIN_2X,
+    _4096mV = FVR_GAIN_4X,
+    _5000mV,
+} adc_scale_settings_t;
+
 //
-#define _1024mV FVR_GAIN_1X
-#define _2048mV FVR_GAIN_2X
-#define _4096mV FVR_GAIN_4X
+// #define _1024mV FVR_GAIN_1X
+// #define _2048mV FVR_GAIN_2X
+// #define _4096mV FVR_GAIN_4X
+// #define _5000mV VCC
 
 // store the voltage setting per ADC channel
 static uint8_t maxVoltage[NUM_OF_CHANNELS] = {
@@ -104,7 +119,14 @@ static uint8_t maxVoltage[NUM_OF_CHANNELS] = {
 #define adc_select_channel(channel) ADPCH = channel
 
 //! Warning - input not sanitized
-static void adc_select_scale(uint8_t scale) { fvr_set_adc_buffer_gain(scale); }
+static void adc_select_scale(uint8_t scale) {
+    if (scale < _5000mV) {
+        ADREFbits.PREF = ADREF_PREF_FVR;
+        fvr_set_adc_buffer_gain(scale);
+    } else {
+        ADREFbits.PREF = ADREF_PREF_VDD;
+    }
+}
 
 uint16_t adc_convert(uint8_t channel, uint8_t scale) {
     adc_select_channel(channel);
@@ -121,11 +143,22 @@ uint16_t adc_convert(uint8_t channel, uint8_t scale) {
 
 /* -------------------------------------------------------------------------- */
 
+uint16_t convert_to_millivolts(uint16_t measurement, uint8_t scale) {
+    if (scale == _1024mV) {
+        measurement /= 4;
+    } else if (scale == _2048mV) {
+        measurement /= 2;
+    } else if (scale == _5000mV) {
+        float temp = (float)measurement * 1.22;
+        measurement = (uint16_t)temp;
+    }
+    return measurement;
+}
+
 uint16_t adc_read(uint8_t channel) {
     uint16_t measurement = 0;
 
     while (1) {
-        adc_select_scale(maxVoltage[channel]);
         measurement = adc_convert(channel, maxVoltage[channel]);
 
         if (measurement < 1750) {
@@ -135,7 +168,7 @@ uint16_t adc_read(uint8_t channel) {
                 break;
             }
         } else if (measurement > 3900) {
-            if (maxVoltage[channel] < _4096mV) {
+            if (maxVoltage[channel] < _5000mV) {
                 maxVoltage[channel]++;
             } else {
                 break;
@@ -145,12 +178,5 @@ uint16_t adc_read(uint8_t channel) {
         }
     }
 
-    // Convert measurement to millivolts as needed.
-    if (maxVoltage[channel] == _1024mV) {
-        measurement /= 4;
-    } else if (maxVoltage[channel] == _2048mV) {
-        measurement /= 2;
-    }
-
-    return measurement;
+    return convert_to_millivolts(measurement, maxVoltage[channel]);
 }
