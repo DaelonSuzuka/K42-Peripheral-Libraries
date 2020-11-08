@@ -139,6 +139,8 @@ static const uint16_t baudTable[] = {
     832,  // 19200
     416,  // 38400
     138,  // 115200
+    68,   // 230400
+    34,   // 460800
 };
 
 static void UART2_baud_select(baud_rate_t baudRate) {
