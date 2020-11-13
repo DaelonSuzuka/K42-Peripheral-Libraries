@@ -1,6 +1,8 @@
 #include "adc.h"
 #include "fixed_voltage_reference.h"
+#include "os/log_macros.h"
 #include "pic_header.h"
+static uint8_t LOG_LEVEL = L_SILENT;
 
 /* ************************************************************************** */
 
@@ -23,6 +25,8 @@ void adc_init(void) {
     ADCLK = 0b011111;  // FOSC/64
 
     ADCON0bits.ON = 1; // Enable ADC peripheral
+
+    log_register();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -156,19 +160,31 @@ uint16_t convert_to_millivolts(uint16_t measurement, uint8_t scale) {
 }
 
 uint16_t adc_read(uint8_t channel) {
+    LOG_TRACE({ println("adc_read"); });
+
     uint16_t measurement = 0;
 
     while (1) {
         measurement = adc_convert(channel, maxVoltage[channel]);
 
+        LOG_DEBUG({
+            printf("channel: %d, ", channel);
+            printf("maxVoltage: %d, ", maxVoltage[channel]);
+            printf("raw: %u, ",  measurement);
+            printf("adjusted: %u",  convert_to_millivolts(measurement, maxVoltage[channel]));
+            println("");
+        });
+
         if (measurement < 1750) {
             if (maxVoltage[channel] > _1024mV) {
+                // LOG_INFO({ printf("ch: %d, V+\r\n", channel); });
                 maxVoltage[channel]--;
             } else {
                 break;
             }
         } else if (measurement > 3900) {
             if (maxVoltage[channel] < _5000mV) {
+                // LOG_INFO({ printf("ch: %d, V-\r\n", channel); });
                 maxVoltage[channel]++;
             } else {
                 break;

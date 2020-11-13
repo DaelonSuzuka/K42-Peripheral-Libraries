@@ -6,6 +6,10 @@
 
 /* ************************************************************************** */
 
+extern void nonvolatile_memory_init(void);
+
+/* ************************************************************************** */
+
 /*  Notes on using EEPROM Memory operations:
 
     EEPROM can be read AND written as individual bytes, no block operations are
@@ -47,7 +51,17 @@ extern void internal_eeprom_write(uint16_t address, uint8_t data);
 
 /* -------------------------------------------------------------------------- */
 
-typedef uint24_t NVM_address_t;
+typedef __uint24 NVM_address_t;
+
+// In order to print an NVM address, you have to cast it to a u32
+// I've forgotten to do this cast one too many times, so now there's this macro
+// to make sure we can't forget.
+#define print_nvm_address(address) printf("address: %lu ", (uint32_t)address)
+#define print_nvm_address_ln(address)                                          \
+    printf("address: %lu \r\n", (uint32_t)address)
+
+extern void print_flash_block(NVM_address_t address);
+extern void print_flash_buffer(NVM_address_t address, uint8_t *buffer);
 
 /* -------------------------------------------------------------------------- */
 
@@ -59,6 +73,10 @@ extern void flash_write_byte(NVM_address_t address, uint8_t data);
 
 // Read an entire block of 64 bytes from Flash memory into the provided buffer
 extern void flash_read_block(NVM_address_t address, uint8_t *readBuffer);
+
+// Read an entire block of 64 bytes from Flash memory into the provided buffer
+// Uses pointer to ROM instead of tableread instruction
+extern void flash_read_block2(NVM_address_t address, uint8_t *readBuffer);
 
 // Erase a block of Flash memory at (address)
 extern void flash_block_erase(NVM_address_t address);

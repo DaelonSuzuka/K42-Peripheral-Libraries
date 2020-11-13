@@ -1,6 +1,33 @@
 #include "nonvolatile_memory.h"
 #include "interrupt.h"
+#include "os/log_macros.h"
 #include "pic_header.h"
+static uint8_t LOG_LEVEL = L_SILENT;
+
+/* ************************************************************************** */
+// this prints all the relevant macros defined by the compiler, for debug
+static void print_configuration_data(void) {
+    println("");
+    printf("_EEPROMSIZE: %u\r\n", _EEPROMSIZE);
+    println("");
+    printf("_ROMSIZE: %lu\r\n", _ROMSIZE);
+    printf("_FLASH_ERASE_SIZE: %u\r\n", _FLASH_ERASE_SIZE);
+    printf("_FLASH_WRITE_SIZE: %u\r\n", _FLASH_WRITE_SIZE);
+    println("");
+    printf("FLASH_ERASE_BLOCKSIZE: %u\r\n", FLASH_ERASE_BLOCKSIZE);
+    printf("FLASH_WRITE_BLOCKSIZE: %u\r\n", FLASH_WRITE_BLOCKSIZE);
+    printf("FLASH_BUFFER_SIZE: %u\r\n", FLASH_BUFFER_SIZE);
+    printf("FLASH_BLOCK_MASK: %lu\r\n", FLASH_BLOCK_MASK);
+    printf("FLASH_ELEMENT_MASK: %u\r\n", FLASH_ELEMENT_MASK);
+}
+
+void nonvolatile_memory_init(void) {
+    //
+    log_register();
+
+    //
+    LOG_DEBUG({ print_configuration_data(); });
+}
 
 /* ************************************************************************** */
 
@@ -58,6 +85,8 @@ void nvm_write(void) {
 */
 
 uint8_t internal_eeprom_read(uint16_t address) {
+    LOG_TRACE({ println("eeprom_read"); });
+
     NVMADRH = address >> 8;
     NVMADRL = address;
 
@@ -71,8 +100,10 @@ uint8_t internal_eeprom_read(uint16_t address) {
 }
 
 void internal_eeprom_write(uint16_t address, uint8_t data) {
+    LOG_TRACE({ println("eeprom_write"); });
     // Wait for possible previous write to complete
     if (NVMCON1bits.WR) {
+        LOG_DEBUG({ println("previous write not finished"); });
         while (NVMCON1bits.WR) {
         }
     }
@@ -156,16 +187,98 @@ void internal_eeprom_write(uint16_t address, uint8_t data) {
         holdingRegister[(++TBLPTR & 0x00007F)] = TABLAT; // "TBLWT+*"
 */
 
+/* -------------------------------------------------------------------------- */
+
+void print_flash_block(NVM_address_t address) {
+    uint8_t element = address & FLASH_ELEMENT_MASK;
+    NVM_address_t blockAddress = address & FLASH_BLOCK_MASK;
+    uint16_t blockNumber = blockAddress / 128;
+
+    println("-----------------------------------------------------");
+    println("|  address  |  blockAddress  |  block#  |  element  |");
+    printf("|  %-7lu  |  %-12lu  |  %-6u  |  %-7u  |\r\n", (uint32_t)address,
+           (uint32_t)blockAddress, blockNumber, element);
+    println("-----------------------------------------------------");
+
+    // create a pointer to the first byte of the selected block
+    const char *blockPointer = (const char *)blockAddress;
+
+    print("|  "); // start of first row
+    for (uint8_t i = 0; i < FLASH_BUFFER_SIZE; i++) {
+        char tempChar = *blockPointer++;
+        if (i == element) {
+            printf("\033[7m%02x\033[0;37;40m ", tempChar);
+        } else {
+            printf("%02x ", tempChar);
+        }
+        if (((i + 1) % 16) == 0) {
+            println(" |"); // end of current row
+            if (i < FLASH_BUFFER_SIZE - 1) {
+                print("|  "); // start of next row
+            }
+        }
+    }
+    println("-----------------------------------------------------");
+}
+
+void print_flash_buffer(NVM_address_t address, uint8_t *buffer) {
+    uint8_t element = address & FLASH_ELEMENT_MASK;
+    NVM_address_t blockAddress = address & FLASH_BLOCK_MASK;
+
+    println("");
+    printf("address: %lu ", (uint32_t)address);
+    printf("blockAddress: %lu ", (uint32_t)blockAddress);
+    printf("element: %d\r\n", element);
+
+    for (uint8_t i = 0; i < FLASH_BUFFER_SIZE; i++) {
+        if (i == element) {
+            printf("\033[7m%02x\033[0;37;40m ", buffer[i]);
+        } else {
+            printf("%02x ", buffer[i]);
+        }
+        if (((i + 1) % 16) == 0) {
+            println("");
+        }
+    }
+    println("");
+}
+
 /* ************************************************************************** */
 
 static void set_TBLPTR(NVM_address_t address) {
+    LOG_DEBUG({ print_nvm_address_ln(address); });
     TBLPTR = address;
+    //! There should be a log statement here, but it causes a serious bug
 }
+
+/*  //! WARNING
+
+    For some reason, sometimes printing the value of TBLPTR causes
+    minicom on the servitor to lock up? This is very bizarre behavior.
+    This seems to happen directly before starting a flash block write.
+
+    Making a local copy of TBLPTR and printing that doesn't seem to help.
+
+    Here's stuff I tried:
+
+    This version tries to print the contents of TBLPTR directly but it actually
+    produces gibberish because printf can't take unsigned 24 bit inputs.
+        LOG_DEBUG({ printf("TBLPTR: %lu\r\n", TBLPTR); });
+
+    This fixes the gibberish, but now it crashes minicom sometimes.
+        LOG_DEBUG({ printf("TBLPTR: %lu\r\n", (uint32_t)TBLPTR); });
+
+    This was a guess about printf behaving badly with a hardware register as an
+    input? Minicom still crashes with this, so it didn't help.
+        uint32_t copyOfTBLPTR = (uint32_t)TBLPTR;
+        LOG_DEBUG({ printf("TBLPTR: %lu\r\n", copyOfTBLPTR); });
+*/
 
 /* -------------------------------------------------------------------------- */
 
 // Write one byte into flash memory at (address)
 void flash_write_byte(NVM_address_t address, uint8_t data) {
+    LOG_TRACE({ println("flash_write_byte"); });
     SELECT_FLASH();
 
     // if existingData is already what we want, then we're done
@@ -202,6 +315,8 @@ void flash_write_byte(NVM_address_t address, uint8_t data) {
 
 // Read one byte from Flash memory at (address)
 uint8_t flash_read_byte(NVM_address_t address) {
+    LOG_TRACE({ println("flash_read_byte"); });
+
     set_TBLPTR(address);
 
     // Read one byte from flash to TABLAT
@@ -211,8 +326,24 @@ uint8_t flash_read_byte(NVM_address_t address) {
 }
 
 // Read an entire block of 64 bytes from Flash memory into the provided buffer
-// Uses pointer to ROM instead of tableread instruction
 void flash_read_block(NVM_address_t address, uint8_t *readBuffer) {
+    LOG_TRACE({ println("flash_read_block"); });
+
+    set_TBLPTR(address & FLASH_BLOCK_MASK);
+
+    // copy TABLAT into readBuffer
+    SELECT_FLASH();
+    for (uint8_t i = 0; i < FLASH_BUFFER_SIZE; i++) {
+        asm("TBLRDPOSTINC");
+        readBuffer[i] = TABLAT;
+    }
+}
+
+// Read an entire block of 64 bytes from Flash memory into the provided buffer
+// Uses pointer to ROM instead of tableread instruction
+void flash_read_block2(NVM_address_t address, uint8_t *readBuffer) {
+    LOG_TRACE({ println("flash_read_block"); });
+
     NVM_address_t blockAddress = (address & FLASH_BLOCK_MASK);
     const char *blockPointer = (const char *)blockAddress;
 
@@ -223,6 +354,8 @@ void flash_read_block(NVM_address_t address, uint8_t *readBuffer) {
 
 // Erase a block of Flash memory at (address)
 void flash_block_erase(NVM_address_t address) {
+    LOG_TRACE({ println("flash_block_erase"); });
+
     set_TBLPTR(address);
 
     // Engage
@@ -233,6 +366,8 @@ void flash_block_erase(NVM_address_t address) {
 
 // Write the provided buffer into flash memory at (address)
 void flash_block_write(NVM_address_t address, uint8_t *writeBuffer) {
+    LOG_TRACE({ println("flash_block_write"); });
+
     set_TBLPTR(address & FLASH_BLOCK_MASK);
 
     // copy writeBuffer into TABLAT
@@ -255,6 +390,8 @@ void flash_block_write(NVM_address_t address, uint8_t *writeBuffer) {
 
 // read a single byte from the config area
 uint8_t read_config_data(NVM_address_t address) {
+    LOG_TRACE({ println("read_config_data"); });
+
     set_TBLPTR(address);
 
     // Read one byte from config to TABLAT
