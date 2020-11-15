@@ -1,5 +1,5 @@
 #include "reset.h"
-#include "os/log_macros.h"
+#include "os/logging.h"
 #include "pic_header.h"
 #define LOG_LEVEL L_FATAL
 

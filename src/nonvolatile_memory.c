@@ -1,6 +1,6 @@
 #include "nonvolatile_memory.h"
 #include "interrupt.h"
-#include "os/log_macros.h"
+#include "os/logging.h"
 #include "pic_header.h"
 static uint8_t LOG_LEVEL = L_SILENT;
 
