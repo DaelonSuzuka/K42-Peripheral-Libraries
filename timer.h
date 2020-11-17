@@ -185,22 +185,22 @@
 /* ************************************************************************** */
 
 // Timer X Interrupt Flag bit
-#define TIMER0_IF PIR3bits.TMR0IF
-#define TIMER1_IF PIR4bits.TMR1IF
-#define TIMER2_IF PIR4bits.TMR2IF
-#define TIMER3_IF PIR6bits.TMR3IF
-#define TIMER4_IF PIR7bits.TMR4IF
-#define TIMER5_IF PIR8bits.TMR5IF
-#define TIMER6_IF PIR9bits.TMR6IF
+#define TIMER0_IF TMR0IF
+#define TIMER1_IF TMR1IF
+#define TIMER2_IF TMR2IF
+#define TIMER3_IF TMR3IF
+#define TIMER4_IF TMR4IF
+#define TIMER5_IF TMR5IF
+#define TIMER6_IF TMR6IF
 
 // Timer X Interrupt Enable bit
-#define TIMER0_IE PIE3bits.TMR0IE
-#define TIMER1_IE PIE4bits.TMR1IE
-#define TIMER2_IE PIE4bits.TMR2IE
-#define TIMER3_IE PIE6bits.TMR3IE
-#define TIMER4_IE PIE7bits.TMR4IE
-#define TIMER5_IE PIE8bits.TMR5IE
-#define TIMER6_IE PIE9bits.TMR6IE
+#define TIMER0_IE TMR0IE
+#define TIMER1_IE TMR1IE
+#define TIMER2_IE TMR2IE
+#define TIMER3_IE TMR3IE
+#define TIMER4_IE TMR4IE
+#define TIMER5_IE TMR5IE
+#define TIMER6_IE TMR6IE
 
 // Timer X start bit
 #define TIMER0_ON T0CON0bits.EN

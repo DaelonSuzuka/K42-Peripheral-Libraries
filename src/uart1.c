@@ -14,12 +14,12 @@ static volatile fast_ring_buffer_t UART1_tx_buffer = {0};
 
     This function is an Interrupt Vector Table compatible ISR to respond to the
     U1TX interrupt signal. This signal is generated whenever U1TXB is empty and
-    PIE3bits.U1TXIE is enabled.
+    U1TXIE is enabled.
 */
 
 // wrappers to make the register accesses easier
-#define UART1_TX_IE_enable() PIE3bits.U1TXIE = 1
-#define UART1_TX_IE_disable() PIE3bits.U1TXIE = 0
+#define UART1_TX_IE_enable() U1TXIE = 1
+#define UART1_TX_IE_disable() U1TXIE = 0
 
 void __interrupt(irq(U1TX), high_priority) UART1_tx_ISR() {
     if (buffer_is_empty(UART1_tx_buffer)) {
@@ -167,7 +167,7 @@ uart_interface_t UART1_init(uart_config_t config) {
     U1CON0bits.TXEN = 1; // Transmit is enabled
     U1CON0bits.RXEN = 1; // Recieve is enabled
 
-    PIE3bits.U1RXIE = 1; // Enable UART1 Recieve Interrupt
+    U1RXIE = 1; // Enable UART1 Recieve Interrupt
 
     U1CON1bits.ON = 1; // Enable UART1
 

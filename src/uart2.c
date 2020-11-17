@@ -14,13 +14,13 @@ static volatile fast_ring_buffer_t UART2_tx_buffer = {0};
 
     This function is an Interrupt Vector Table compatible ISR to respond to the
     U2TX interrupt signal. This signal is generated whenever U2TXB is empty and
-    PIE3bits.U2TXIE is enabled. In effect, the interrupt flag is set every time
+    U2TXIE is enabled. In effect, the interrupt flag is set every time
     UART2 finishes transmitting a byte.
 */
 
 // wrappers to make the register accesses easier
-#define UART2_TX_IE_enable() PIE6bits.U2TXIE = 1
-#define UART2_TX_IE_disable() PIE6bits.U2TXIE = 0
+#define UART2_TX_IE_enable() U2TXIE = 1
+#define UART2_TX_IE_disable() U2TXIE = 0
 
 void __interrupt(irq(U2TX), high_priority) UART2_tx_ISR() {
     if (buffer_is_empty(UART2_tx_buffer)) {
@@ -165,7 +165,7 @@ uart_interface_t UART2_init(uart_config_t config) {
     U2CON0bits.TXEN = 1; // Transmit is enabled
     U2CON0bits.RXEN = 1; // Recieve is enabled
 
-    PIE6bits.U2RXIE = 1; // Enable UART2 Recieve Interrupt
+    U2RXIE = 1; // Enable UART2 Recieve Interrupt
 
     U2CON1bits.ON = 1; // Enable UART2
 
