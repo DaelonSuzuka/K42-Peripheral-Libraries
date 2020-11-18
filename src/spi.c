@@ -11,8 +11,8 @@ static uint8_t LOG_LEVEL = L_SILENT;
 
 void spi_init(pps_output_t *clockOutPin, pps_output_t *dataOutPin) {
     // CLC setup
-    clc1_passthrough_init(CLC_SCK1);
-    clc2_passthrough_init(CLC_SDO1);
+    clc1_passthrough_init(CLC_SPI1_SCK1);
+    clc2_passthrough_init(CLC_SPI1_SDO1);
 
     // PPS setup
     pps_out_CLC1_OUTPUT(clockOutPin);
