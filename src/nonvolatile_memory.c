@@ -58,21 +58,12 @@ void nonvolatile_memory_init(void) {
 
 void nvm_write(void) {
     begin_critical_section();
-#if FAMILY_Q43 || FAMILY_Q84
+
     // Magic Sequence - Do Not Change
     NVMLOCK = 0x55;
     NVMLOCK = 0xAA;
     NVMCON0bits.GO = 1;
-#else
-    NVMCON1bits.WREN = 1; // Enable NVM writes
 
-    // Magic Sequence - Do Not Change
-    NVMCON2 = 0x55;
-    NVMCON2 = 0xAA;
-    NVMCON1bits.WR = 1;
-
-    NVMCON1bits.WREN = 0; // Disable NVM writes
-#endif
     end_critical_section();
 }
 
@@ -82,9 +73,9 @@ void nvm_write(void) {
 
 uint8_t internal_eeprom_read(uint16_t address) {
     LOG_TRACE({ println("eeprom_read"); });
-#if FAMILY_Q43 || FAMILY_Q84
+
     // set address, including EEPROM offset
-    NVMADR = EEPROM_BASE_ADDRESS + address;
+    NVMADR = EEPROM_BASE_ADDRESS + (uint24_t)address;
 
     // set operation
     NVMCON1bits.NVMCMD = NVM_READ;
@@ -92,59 +83,29 @@ uint8_t internal_eeprom_read(uint16_t address) {
     // engage
     NVMCON0bits.GO = 1;
 
-    return NVMDAT;
-#else
-    NVMADRH = address >> 8;
-    NVMADRL = address;
-
-    SELECT_EEPROM();
-
-    // Initiate read operation
-    NVMCON1bits.RD = 1;
-
-    // Return the value
-    return NVMDAT;
-#endif
+    return NVMDATL;
 }
 
 void internal_eeprom_write(uint16_t address, uint8_t data) {
-    LOG_TRACE({ println("eeprom_write"); });
-#if FAMILY_Q43 || FAMILY_Q84
+    LOG_TRACE({ printf("eeprom_write: %02x @ %u\r\n", data, address); });
+
     // Wait for possible previous write to complete
-    if (NVMCON0bits.GO) {
-        while (NVMCON0bits.GO) {
-        }
+    while (NVMCON0bits.GO) {
+        // empty
     }
 
     // set address, including EEPROM offset
-    NVMADR = EEPROM_BASE_ADDRESS + address;
-
-    // set operation
-    NVMCON1bits.NVMCMD = NVM_WRITE;
+    NVMADR = EEPROM_BASE_ADDRESS + (uint24_t)address;
 
     // put data in
     NVMDATL = data;
 
+    // set operation
+    NVMCON1bits.NVMCMD = NVM_WRITE;
+
     nvm_write();
-#else
-    // Wait for possible previous write to complete
-    if (NVMCON1bits.WR) {
-        LOG_DEBUG({ println("previous write not finished"); });
-        while (NVMCON1bits.WR) {
-        }
-    }
 
-    NVMADRH = address >> 8;
-    NVMADRL = address;
-
-    // Load data into register
-    NVMDAT = data;
-
-    // Engage
-    SELECT_EEPROM();
-    NVM_WRITE_MODE();
-    nvm_write();
-#endif
+    NVMCON1bits.NVMCMD = NVM_READ;
 }
 
 /* ************************************************************************** */
@@ -321,7 +282,7 @@ void flash_block_write(NVM_address_t address, uint8_t *writeBuffer) {
 // read a single byte from the config area
 uint8_t read_config_data(NVM_address_t address) {
     LOG_TRACE({ println("read_config_data"); });
-#if FAMILY_Q43 || FAMILY_Q84
+
     NVMADR = address;
 
     // set operation
@@ -331,12 +292,4 @@ uint8_t read_config_data(NVM_address_t address) {
     NVMCON0bits.GO = 1;
 
     return NVMDAT;
-#else
-    TBLPTR = address;
-
-    // Read one byte from config to TABLAT
-    SELECT_CONFIG();
-    asm("TBLRD");
-    return TABLAT;
-#endif
 }
