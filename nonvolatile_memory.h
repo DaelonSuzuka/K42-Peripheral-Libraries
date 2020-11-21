@@ -37,11 +37,11 @@ extern void internal_eeprom_write(uint16_t address, uint8_t data);
 
 #define FLASH_SIZE _ROMSIZE
 
-// _FLASH_ERASE_SIZE is compiler-defined as the erase row size, in bytes
-#define FLASH_ERASE_BLOCKSIZE _FLASH_ERASE_SIZE
+// _FLASH_ERASE_SIZE is compiler-defined as the erase row size, in words
+#define FLASH_ERASE_BLOCKSIZE _FLASH_ERASE_SIZE * 2
 
-// _FLASH_WRITE_SIZE is compiler-defined as the write row size, in bytes
-#define FLASH_WRITE_BLOCKSIZE _FLASH_WRITE_SIZE
+// _FLASH_WRITE_SIZE is compiler-defined as the write row size, in words
+#define FLASH_WRITE_BLOCKSIZE _FLASH_WRITE_SIZE 
 
 // The size of the array you need in order to do flash block operations
 #define FLASH_BUFFER_SIZE FLASH_ERASE_BLOCKSIZE
@@ -63,26 +63,30 @@ typedef __uint24 NVM_address_t;
 extern void print_flash_block(NVM_address_t address);
 extern void print_flash_buffer(NVM_address_t address, uint8_t *buffer);
 
+/* ************************************************************************** */
+
+// 
+extern uint8_t flashBuffer[256];
+
+//
+extern void flash_print_page_buffer(void);
+
+//
+extern void flash_page_read(NVM_address_t address);
+
+//
+extern void flash_page_erase(NVM_address_t address);
+
+//
+extern void flash_page_write(NVM_address_t address);
+
 /* -------------------------------------------------------------------------- */
 
-// Read one byte from Flash memory at (address)
-extern uint8_t flash_read_byte(NVM_address_t address);
+//
+void flash_write_byte(NVM_address_t address, uint8_t data);
 
-// Write one byte into flash memory at (address)
-extern void flash_write_byte(NVM_address_t address, uint8_t data);
-
-// Read an entire block of 64 bytes from Flash memory into the provided buffer
-extern void flash_read_block(NVM_address_t address, uint8_t *readBuffer);
-
-// Read an entire block of 64 bytes from Flash memory into the provided buffer
-// Uses pointer to ROM instead of tableread instruction
-extern void flash_read_block2(NVM_address_t address, uint8_t *readBuffer);
-
-// Erase a block of Flash memory at (address)
-extern void flash_block_erase(NVM_address_t address);
-
-// Write the provided buffer into flash memory at (address)
-extern void flash_block_write(NVM_address_t address, uint8_t *writeBuffer);
+//
+uint8_t flash_read_byte(NVM_address_t address);
 
 /* ************************************************************************** */
 
