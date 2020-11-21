@@ -3,6 +3,7 @@
 #include "os/logging.h"
 #include "pic_family.h"
 #include "pic_header.h"
+#include <stdbool.h>
 static uint8_t LOG_LEVEL = L_SILENT;
 
 /* ************************************************************************** */
@@ -32,72 +33,49 @@ void nonvolatile_memory_init(void) {
 
 /* ************************************************************************** */
 
-// NVM operations
-#define NVM_READ 0b000
-#define NVM_READ_POST_INC 0b001
-#define NVM_READ_PAGE 0b010
-#define NVM_WRITE 0b011
-#define NVM_WRITE_POST_INC 0b100
-#define NVM_WRITE_PAGE 0b101
-#define NVM_ERASE_PAGE 0b110
+void nvm_activate(NVM_address_t address, enum nvm_operations operation) {
+    NVMCON1bits.NVMCMD = operation;
 
-/* ************************************************************************** */
-/*  nvm_write() is the 'engage' button for writing to both types of nonvolatile
-    memory.
+    NVMADR = address;
 
-    This function is the smallest unit that needs to be marked critical.
-*/
+    if (operation >= NVM_WRITE) {
+        begin_critical_section();
 
-void nvm_write(void) {
-    begin_critical_section();
-
-    // Magic Sequence - Do Not Change
-    NVMLOCK = 0x55;
-    NVMLOCK = 0xAA;
-    NVMCON0bits.GO = 1;
-
-    end_critical_section();
-}
-
-/* ************************************************************************** */
-
-#define EEPROM_BASE_ADDRESS 0x380000
-
-uint8_t internal_eeprom_read(uint16_t address) {
-    LOG_TRACE({ println("eeprom_read"); });
-
-    // set address, including EEPROM offset
-    NVMADR = EEPROM_BASE_ADDRESS + (uint24_t)address;
-
-    // set operation
-    NVMCON1bits.NVMCMD = NVM_READ;
+        // Magic Sequence - Do Not Change
+        NVMLOCK = 0x55;
+        NVMLOCK = 0xAA;
+    }
 
     // engage
     NVMCON0bits.GO = 1;
 
+    if (operation >= NVM_WRITE) {
+        end_critical_section();
+    }
+
+    while (NVMCON0bits.GO) {
+        // wait for the operation to finish
+    }
+
+    NVMCON1bits.NVMCMD = NVM_READ; // reset the operation for safety
+}
+
+/* ************************************************************************** */
+
+uint8_t internal_eeprom_read(NVM_address_t address) {
+    if (address < EEPROM_BASE_ADDRESS) {
+        address += EEPROM_BASE_ADDRESS;
+    }
+    nvm_activate(address, NVM_READ);
     return NVMDATL;
 }
 
-void internal_eeprom_write(uint16_t address, uint8_t data) {
-    LOG_TRACE({ printf("eeprom_write: %02x @ %u\r\n", data, address); });
-
-    // Wait for possible previous write to complete
-    while (NVMCON0bits.GO) {
-        // empty
+void internal_eeprom_write(NVM_address_t address, uint8_t data) {
+    if (address < EEPROM_BASE_ADDRESS) {
+        address += EEPROM_BASE_ADDRESS;
     }
-
-    // set address, including EEPROM offset
-    NVMADR = EEPROM_BASE_ADDRESS + (uint24_t)address;
-
-    // put data in
     NVMDATL = data;
-
-    // set operation
-    NVMCON1bits.NVMCMD = NVM_WRITE;
-
-    nvm_write();
-
-    NVMCON1bits.NVMCMD = NVM_READ;
+    nvm_activate(address, NVM_WRITE);
 }
 
 /* ************************************************************************** */
@@ -157,65 +135,65 @@ void print_flash_buffer(NVM_address_t address, uint8_t *buffer) {
 }
 
 /* ************************************************************************** */
-// flash page operations
 
-uint8_t flashBuffer[256] @0x2500;
+uint8_t flashBuffer[FLASH_BUFFER_SIZE] @0x2500;
 
+// 
 void flash_page_read(NVM_address_t address) {
-    LOG_TRACE({ println("flash_page_read"); });
-
-    NVMADR = address;
-
-    NVMCON1bits.NVMCMD = NVM_READ_PAGE;
-
-    NVMCON0bits.GO = 1;
-    while (NVMCON0bits.GO)
-        ;
-
-    // reset to safe command
-    NVMCON1bits.NVMCMD = NVM_READ;
+    nvm_activate(address, NVM_READ_PAGE); //
 }
 
+// 
 void flash_page_erase(NVM_address_t address) {
-    LOG_TRACE({ println("flash_page_erase"); });
-
-    NVMADR = address;
-
-    NVMCON1bits.NVMCMD = NVM_ERASE_PAGE;
-
-    nvm_write();
-    while (NVMCON0bits.GO)
-        ;
-
-    // reset to safe command
-    NVMCON1bits.NVMCMD = NVM_READ;
+    nvm_activate(address, NVM_ERASE_PAGE); //
 }
 
+// 
 void flash_page_write(NVM_address_t address) {
-    LOG_TRACE({ println("flash_page_write"); });
+    nvm_activate(address, NVM_WRITE_PAGE); //
+}
 
-    NVMADR = address;
+// 
+void flash_read_block(NVM_address_t address, uint8_t *destination) {
+    nvm_activate(address, NVM_READ_PAGE);
 
-    NVMCON1bits.NVMCMD = NVM_WRITE_PAGE;
+    if (destination && (destination != &flashBuffer)) {
+        for (uint16_t i = 0; i < FLASH_BUFFER_SIZE; i++) {
+            destination[i] = flashBuffer[i];
+        }
+    }
+}
 
-    nvm_write();
-    while (NVMCON0bits.GO)
-        ;
+// 
+void flash_block_erase(NVM_address_t address) {
+    nvm_activate(address, NVM_ERASE_PAGE); //
+}
 
-    // reset to safe command
-    NVMCON1bits.NVMCMD = NVM_READ;
+// 
+void flash_block_write(NVM_address_t address, uint8_t *source) {
+    if (source && (source != &flashBuffer)) {
+        for (uint16_t i = 0; i < FLASH_BUFFER_SIZE; i++) {
+            flashBuffer[i] = source[i];
+        }
+    }
+
+    nvm_activate(address, NVM_WRITE_PAGE);
 }
 
 /* ************************************************************************** */
 
+// Read one byte from Flash memory at (address)
+uint8_t flash_read_byte(NVM_address_t address) {
+    flash_read_block(address, NULL);
+
+    return flashBuffer[address & FLASH_ELEMENT_MASK];
+}
+
 // Write one byte into flash memory at (address)
 void flash_write_byte(NVM_address_t address, uint8_t data) {
-    LOG_TRACE({ println("flash_write_byte"); });
-
-    // if existingData is already what we want, then we're done
     uint8_t existingData = flash_read_byte(address);
 
-    LOG_DEBUG({ printf("existing: %02x new: %02x \r\n", existingData, data); });
+    // if existingData is already what we want, then we're done
     if (existingData == data) {
         return;
     }
@@ -228,38 +206,37 @@ void flash_write_byte(NVM_address_t address, uint8_t data) {
         }
     }
 
-    // Read existing block into buffer
-    flash_page_read(address);
+    flash_read_block(address, NULL);
 
     // write the new data into the buffer
     flashBuffer[address & FLASH_ELEMENT_MASK] = data;
 
     // only erase if we require a 0 -> 1 transition
     if (mustErase) {
-        flash_page_erase(address);
+        flash_block_erase(address);
     }
 
-    // Write the modified buffer back into flash
-    flash_page_write(address);
+    flash_block_write(address, NULL);
 }
 
 /* -------------------------------------------------------------------------- */
 
-// Read one byte from Flash memory at (address)
-uint8_t flash_read_byte(NVM_address_t address) {
-    LOG_TRACE({ println("flash_read_byte"); });
+// Read a word of flash
+uint16_t flash_read_word(NVM_address_t address) {
+    nvm_activate(address, NVM_READ);
+    return NVMDAT;
+}
 
-    flash_page_read(address);
-
-    return flashBuffer[address & FLASH_ELEMENT_MASK];
+// Write a word of flash
+void flash_write_word(NVM_address_t address, uint16_t data) {
+    NVMDAT = data;
+    nvm_activate(address, NVM_WRITE);
 }
 
 /* ************************************************************************** */
 
 // read a single byte from the config area
 uint8_t read_config_data(NVM_address_t address) {
-    LOG_TRACE({ println("read_config_data"); });
-
     NVMADR = address;
 
     // set operation
