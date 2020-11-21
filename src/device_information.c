@@ -1,5 +1,6 @@
 #include "device_information.h"
 #include "nonvolatile_memory.h"
+#include "pic_family.h"
 #include <stdio.h>
 
 /* ************************************************************************** */
@@ -13,6 +14,7 @@
 */
 /* ************************************************************************** */
 
+#if FAMILY_K42
 #define MUI_ADDRESS 0x3F0000
 #define EUI_ADDRESS 0x3F0010
 #define TSLR2_ADDRESS 0x3F0026
@@ -23,16 +25,36 @@
 #define FVRC1X_ADDRESS 0x3F0036
 #define FVRC2X_ADDRESS 0x3F0038
 #define FVRC4X_ADDRESS 0x3F003A
+#else
+#define MUI_ADDRESS 0x2C0000
+#define EUI_ADDRESS 0x2C0010
+#define TSLR2_ADDRESS 0x2C0026
+#define TSHR2_ADDRESS 0x2C002C
+#define FVRA1X_ADDRESS 0x2C0030
+#define FVRA2X_ADDRESS 0x2C0032
+#define FVRA4X_ADDRESS 0x2C0034
+#define FVRC1X_ADDRESS 0x2C0036
+#define FVRC2X_ADDRESS 0x2C0038
+#define FVRC4X_ADDRESS 0x2C003A
+#endif
 
 device_information_t DIA;
 
 /* -------------------------------------------------------------------------- */
 
+#if FAMILY_K42
 #define ERSIZ_ADDRESS 0x3FFF00
 #define WLSIZ_ADDRESS 0x3FFF02
 #define URSIZ_ADDRESS 0x3FFF04
 #define EESIZ_ADDRESS 0x3FFF06
 #define PCNT_ADDRESS 0x3FFF08
+#else
+#define ERSIZ_ADDRESS 0x3C0000
+#define WLSIZ_ADDRESS 0x3C0002
+#define URSIZ_ADDRESS 0x3C0004
+#define EESIZ_ADDRESS 0x3C0006
+#define PCNT_ADDRESS 0x3C0008
+#endif
 
 device_configuration_t DCI;
 
