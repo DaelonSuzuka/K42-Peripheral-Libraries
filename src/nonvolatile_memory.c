@@ -232,18 +232,3 @@ void flash_write_word(NVM_address_t address, uint16_t data) {
     NVMDAT = data;
     nvm_activate(address, NVM_WRITE);
 }
-
-/* ************************************************************************** */
-
-// read a single byte from the config area
-uint8_t read_config_data(NVM_address_t address) {
-    NVMADR = address;
-
-    // set operation
-    NVMCON1bits.NVMCMD = NVM_READ;
-
-    // engage
-    NVMCON0bits.GO = 1;
-
-    return NVMDAT;
-}

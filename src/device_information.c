@@ -64,7 +64,7 @@ device_configuration_t DCI;
 #define READ_CONFIG(area, register)                                            \
     do {                                                                       \
         for (uint8_t i = 0; i < register##_SIZE; i++) {                        \
-            area.register##_bytes[i] = read_config_data(register##_ADDRESS + i);       \
+            area.register##_bytes[i] = flash_read_byte(register##_ADDRESS + i);       \
         }                                                                      \
     } while (0)
 

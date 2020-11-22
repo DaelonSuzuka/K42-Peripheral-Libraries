@@ -103,7 +103,4 @@ extern void flash_write_word(NVM_address_t address, uint16_t data);
 
 /* ************************************************************************** */
 
-// read a single byte from the config area
-extern uint8_t read_config_data(NVM_address_t address);
-
 #endif // _NONVOLATILE_MEMORY_H_
