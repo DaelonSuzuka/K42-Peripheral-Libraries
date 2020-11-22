@@ -70,22 +70,22 @@ extern void print_flash_buffer(NVM_address_t address, uint8_t *buffer);
 extern uint8_t flashBuffer[FLASH_BUFFER_SIZE];
 
 //
-extern void flash_page_read(NVM_address_t address);
+extern void flash_read_page(NVM_address_t address);
 
 //
-extern void flash_page_erase(NVM_address_t address);
+extern void flash_erase_page(NVM_address_t address);
 
 //
-extern void flash_page_write(NVM_address_t address);
+extern void flash_write_page(NVM_address_t address);
 
 // 
 extern void flash_read_block(NVM_address_t address, uint8_t *destination);
 
 // 
-extern void flash_block_erase(NVM_address_t address);
+extern void flash_erase_block(NVM_address_t address);
 
 // 
-extern void flash_block_write(NVM_address_t address, uint8_t *source);
+extern void flash_write_block(NVM_address_t address, uint8_t *source);
 
 /* ************************************************************************** */
 

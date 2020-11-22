@@ -139,17 +139,17 @@ void print_flash_buffer(NVM_address_t address, uint8_t *buffer) {
 uint8_t flashBuffer[FLASH_BUFFER_SIZE] @0x2500;
 
 // 
-void flash_page_read(NVM_address_t address) {
+void flash_read_page(NVM_address_t address) {
     nvm_activate(address, NVM_READ_PAGE); //
 }
 
 // 
-void flash_page_erase(NVM_address_t address) {
+void flash_erase_page(NVM_address_t address) {
     nvm_activate(address, NVM_ERASE_PAGE); //
 }
 
 // 
-void flash_page_write(NVM_address_t address) {
+void flash_write_page(NVM_address_t address) {
     nvm_activate(address, NVM_WRITE_PAGE); //
 }
 
@@ -165,12 +165,12 @@ void flash_read_block(NVM_address_t address, uint8_t *destination) {
 }
 
 // 
-void flash_block_erase(NVM_address_t address) {
+void flash_erase_block(NVM_address_t address) {
     nvm_activate(address, NVM_ERASE_PAGE); //
 }
 
 // 
-void flash_block_write(NVM_address_t address, uint8_t *source) {
+void flash_write_block(NVM_address_t address, uint8_t *source) {
     if (source && (source != &flashBuffer)) {
         for (uint16_t i = 0; i < FLASH_BUFFER_SIZE; i++) {
             flashBuffer[i] = source[i];
@@ -213,10 +213,10 @@ void flash_write_byte(NVM_address_t address, uint8_t data) {
 
     // only erase if we require a 0 -> 1 transition
     if (mustErase) {
-        flash_block_erase(address);
+        flash_erase_block(address);
     }
 
-    flash_block_write(address, NULL);
+    flash_write_block(address, NULL);
 }
 
 /* -------------------------------------------------------------------------- */
