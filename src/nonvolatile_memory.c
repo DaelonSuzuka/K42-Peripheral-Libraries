@@ -136,7 +136,7 @@ void print_flash_buffer(NVM_address_t address, uint8_t *buffer) {
 
 /* ************************************************************************** */
 
-uint8_t flashBuffer[FLASH_BUFFER_SIZE] @0x2500;
+uint8_t flashBuffer[FLASH_BUFFER_SIZE] __at(0x2500);
 
 // 
 void flash_read_page(NVM_address_t address) {
