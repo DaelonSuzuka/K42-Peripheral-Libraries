@@ -35,12 +35,21 @@ uart_config_t UART_get_config(uint8_t uartNumber) {
 // make sure the linker can find these inits
 extern uart_interface_t UART1_init(uart_config_t config);
 extern uart_interface_t UART2_init(uart_config_t config);
+extern uart_interface_t UART3_init(uart_config_t config);
+extern uart_interface_t UART4_init(uart_config_t config);
+extern uart_interface_t UART5_init(uart_config_t config);
 
 uart_interface_t UART_init(uart_config_t config) {
     if (config.number == 1) {
         return UART1_init(config);
     } else if (config.number == 2) {
         return UART2_init(config);
+    } else if (config.number == 3) {
+        return UART3_init(config);
+    } else if (config.number == 4) {
+        return UART4_init(config);
+    } else if (config.number == 5) {
+        return UART5_init(config);
     }
 
     uart_interface_t blankInterface = {0};

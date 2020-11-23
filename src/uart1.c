@@ -8,8 +8,6 @@
 /* ************************************************************************** */
 // UART1 transmit
 
-static volatile fast_ring_buffer_t UART1_tx_buffer = {0};
-
 /*  Notes on UART1_tx_ISR()
 
     This function is an Interrupt Vector Table compatible ISR to respond to the
@@ -22,10 +20,10 @@ static volatile fast_ring_buffer_t UART1_tx_buffer = {0};
 #define UART1_TX_IE_disable() U1TXIE = 0
 
 void __interrupt(irq(U1TX), high_priority) UART1_tx_ISR() {
-    if (buffer_is_empty(UART1_tx_buffer)) {
+    if (tx_buffer_is_empty()) {
         UART1_TX_IE_disable();
     } else {
-        U1TXB = buffer_read(UART1_tx_buffer);
+        U1TXB = tx_buffer_read();
     }
 }
 
@@ -52,13 +50,13 @@ void UART1_tx_string(const char *string, const char terminator) {
 
     // loop until hitting the provided termination character
     while (string[currentByte] != terminator) {
-        while (buffer_is_full(UART1_tx_buffer)) {
+        while (tx_buffer_is_full()) {
             UART1_TX_IE_enable();
             delay_ms(20);
         }
 
         begin_critical_section();
-        buffer_write(UART1_tx_buffer, string[currentByte++]);
+        tx_buffer_write(string[currentByte++]);
         end_critical_section();
     }
 
@@ -66,13 +64,13 @@ void UART1_tx_string(const char *string, const char terminator) {
 }
 
 void UART1_tx_char(char data) {
-    while (buffer_is_full(UART1_tx_buffer)) {
+    while (tx_buffer_is_full()) {
         UART1_TX_IE_enable();
         delay_ms(20);
     }
 
     begin_critical_section();
-    buffer_write(UART1_tx_buffer, data);
+    tx_buffer_write(data);
     end_critical_section();
 
     UART1_TX_IE_enable();
@@ -80,8 +78,6 @@ void UART1_tx_char(char data) {
 
 /* -------------------------------------------------------------------------- */
 // UART1 receive
-
-static volatile fast_ring_buffer_t UART1_rx_buffer = {0};
 
 /*  Notes on UART1_rx_ISR()
 
@@ -91,29 +87,29 @@ static volatile fast_ring_buffer_t UART1_rx_buffer = {0};
 */
 
 void __interrupt(irq(U1RX), high_priority) UART1_rx_ISR() {
-    buffer_write(UART1_rx_buffer, U1RXB);
+    rx_buffer_write(U1RXB);
 }
 
 char UART1_rx_char(void) {
     char data = 0;
 
-    if (buffer_is_empty(UART1_rx_buffer)) {
+    if (rx_buffer_is_empty()) {
         return '\0';
     }
 
     begin_critical_section();
-    data = buffer_read(UART1_rx_buffer);
+    data = rx_buffer_read();
     end_critical_section();
 
     return data;
 }
 
 uint8_t UART1_rx_available(void) {
-    if (buffer_is_empty(UART1_rx_buffer)) {
+    if (rx_buffer_is_empty()) {
         return 0;
     }
 
-    return UART1_rx_buffer.head - UART1_rx_buffer.tail;
+    return rx_buffer.head - rx_buffer.tail;
 }
 
 /* ************************************************************************** */
@@ -162,6 +158,9 @@ static void UART1_pps_init(uart_config_t config) {
 uart_interface_t UART1_init(uart_config_t config) {
     UART1_baud_select(config.baud);
     UART1_pps_init(config);
+
+    tx_buffer_init(config.tx_buffer, config.tx_buffer_size);
+    rx_buffer_init(config.rx_buffer, config.rx_buffer_size);
 
     U1CON0bits.BRGS = 1; // Baud Rate is set to high speed
     U1CON0bits.TXEN = 1; // Transmit is enabled

@@ -1,38 +1,122 @@
 #ifndef _UART_BUFFER_H_
 #define _UART_BUFFER_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 /* ************************************************************************** */
 
-// Circular buffer tools
-/*  If UART_BUFFER_SIZE is 256, then the head and tail indexes become
-    significantly easier to manage. Bounds checking and modulus operations can
-    be replaced a single postincrement(x++) instruction, because a uint8_t
-    will wraparound from 0xff to 0x00 on its own.
-
-    Yes, this wastes RAM. No, it doesn't matter, because this project has a
-    minimum of 4k of RAM and nothing else has a significant RAM footprint. If
-    memory becomes an issue, the size of these buffers can be reduced. This
-    would require rewriting the helper macros to add the previously mentioned
-    bounds checking.
-*/
-#define UART_BUFFER_SIZE 256
-
 typedef struct {
-    char contents[UART_BUFFER_SIZE];
-    uint8_t head;
-    uint8_t tail;
-} fast_ring_buffer_t;
+    volatile char *contents;
+    volatile uint8_t head;
+    volatile uint8_t tail;
+    volatile uint8_t size;
+} ring_buffer_t;
 
-#if UART_BUFFER_SIZE == 256
-#define buffer_is_empty(buffer) (buffer.head == buffer.tail)
-#define buffer_is_full(buffer) ((buffer.head + 1) == buffer.tail)
-#define buffer_write(buffer, data) buffer.contents[buffer.head++] = data
-#define buffer_read(buffer) buffer.contents[buffer.tail++]
-#define buffer_peek_last(buffer) buffer.contents[buffer.head - 1]
-#else
-#error UART_BUFFER_SIZE other than 256 is not currently supported because the buffer depends on uint8_t overflow behavior
-#endif
+/* ************************************************************************** */
+
+static volatile ring_buffer_t tx_buffer;
+
+static void tx_buffer_init(char *contents, uint8_t size) {
+    tx_buffer.contents = contents;
+    tx_buffer.head = 0;
+    tx_buffer.tail = 0;
+    tx_buffer.size = size;
+}
+
+static bool tx_buffer_is_empty(void) {
+    return (tx_buffer.head == tx_buffer.tail); //
+}
+
+static bool tx_buffer_is_full(void) {
+    uint8_t head = tx_buffer.head + 1;
+
+    if (head == tx_buffer.size) {
+        head = 0;
+    }
+
+    return (head == tx_buffer.tail);
+}
+
+static void tx_buffer_write(char data) {
+    tx_buffer.contents[tx_buffer.head++] = data;
+
+    if (tx_buffer.head == tx_buffer.size) {
+        tx_buffer.head = 0;
+    }
+}
+
+static char tx_buffer_read(void) {
+    char data = tx_buffer.contents[tx_buffer.tail++];
+
+    if (tx_buffer.tail == tx_buffer.size) {
+        tx_buffer.tail = 0;
+    }
+
+    return data;
+}
+
+// static char tx_buffer_peek_last(void) {
+//     uint8_t last = tx_buffer.head - 1;
+
+//     if (last > tx_buffer.size) {
+//         last = tx_buffer.size - 1;
+//     }
+
+//     return tx_buffer.contents[last];
+// }
+
+/* ************************************************************************** */
+
+static volatile ring_buffer_t rx_buffer;
+
+static void rx_buffer_init(char *contents, uint8_t size) {
+    rx_buffer.contents = contents;
+    rx_buffer.head = 0;
+    rx_buffer.tail = 0;
+    rx_buffer.size = size;
+}
+
+static bool rx_buffer_is_empty(void) {
+    return (rx_buffer.head == rx_buffer.tail); //
+}
+
+// static bool rx_buffer_is_full(void) {
+//     uint8_t head = rx_buffer.head + 1;
+
+//     if (head == rx_buffer.size) {
+//         head = 0;
+//     }
+
+//     return (head == rx_buffer.tail);
+// }
+
+static void rx_buffer_write(char data) {
+    rx_buffer.contents[rx_buffer.head++] = data;
+
+    if (rx_buffer.head == rx_buffer.size) {
+        rx_buffer.head = 0;
+    }
+}
+
+static char rx_buffer_read(void) {
+    char data = rx_buffer.contents[rx_buffer.tail++];
+
+    if (rx_buffer.tail == rx_buffer.size) {
+        rx_buffer.tail = 0;
+    }
+
+    return data;
+}
+
+// static char rx_buffer_peek_last(void) {
+//     uint8_t last = rx_buffer.head - 1;
+
+//     if (last > rx_buffer.size) {
+//         last = rx_buffer.size - 1;
+//     }
+
+//     return rx_buffer.contents[last];
+// }
 
 #endif /* _UART_BUFFER_H_ */

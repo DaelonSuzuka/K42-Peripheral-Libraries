@@ -25,12 +25,43 @@ typedef enum {
     below. If different settings are desired, they can be overwrittenbefore the
     config is given to UART_init().
 */
-typedef struct {         // default settings
-    baud_rate_t baud;    // 9600 baud
-    pps_input_t rxPin;   // no PPS selection
-    pps_output_t *txPin; // no PPS selection
-    uint8_t number;      // N/A
+typedef struct {            // default settings
+    baud_rate_t baud;       // 9600 baud
+    pps_input_t rxPin;      // no PPS selection
+    pps_output_t *txPin;    // no PPS selection
+    uint8_t number;         // N/A
+    char *tx_buffer;        // N/A
+    uint8_t tx_buffer_size; // N/A
+    char *rx_buffer;        // N/A
+    uint8_t rx_buffer_size; // N/A
 } uart_config_t;
+
+/* ************************************************************************** */
+// UART buffer helper macros
+
+#define create_tx_buffer(name, config, size)                                   \
+    do {                                                                       \
+        static char name##_tx_buffer[size];                                    \
+        config.tx_buffer = name##_tx_buffer;                                   \
+        config.tx_buffer_size = size;                                          \
+    } while (0);
+
+#define create_rx_buffer(name, config, size)                                   \
+    do {                                                                       \
+        static char name##_rx_buffer[size];                                    \
+        config.rx_buffer = name##_rx_buffer;                                   \
+        config.rx_buffer_size = size;                                          \
+    } while (0);
+
+#define create_uart_buffers(name, config, size)                                \
+    do {                                                                       \
+        static char name##_tx_buffer[size];                                    \
+        static char name##_rx_buffer[size];                                    \
+        config.tx_buffer = name##_tx_buffer;                                   \
+        config.tx_buffer_size = size;                                          \
+        config.rx_buffer = name##_rx_buffer;                                   \
+        config.rx_buffer_size = size;                                          \
+    } while (0);
 
 /* -------------------------------------------------------------------------- */
 /*  uart_interface_t provides an abstract interface to the UART peripherals.
