@@ -6,15 +6,43 @@
 
 /* ************************************************************************** */
 
+typedef struct {
+    pps_output_t *clockOutPin;
+    pps_output_t *dataOutPin;
+    pps_input_t dataInPin;
+} spi_config_t;
+
 // setup
-extern void spi_init(pps_output_t *clockOutPin, pps_output_t *dataOutPin);
+extern void spi1_init(spi_config_t config);
 
 /* -------------------------------------------------------------------------- */
 
-// Transmits two bytes of data, specifically for the ProII series front panel
-extern void spi_tx_word(uint16_t data);
+#define MAX_SPI_DEVICES 4
 
-// Transmits a string 
-extern void spi_tx_string(const char *string, uint16_t length);
+typedef struct {
+    struct {
+        unsigned useHardware : 1;
+        unsigned polarity : 1;
+        unsigned enable : 1;
+        pps_output_t *pin;
+    } slaveSelect;
+    unsigned inputPolarity : 1;
+    unsigned outputPolarity : 1;
+
+    unsigned bmode : 1;
+    uint8_t width;
+
+    void (*prehook)(void);
+    void (*posthook)(void);
+} spi_device_t;
+
+// register a new device
+// returns the deviceID for the new device
+extern uint8_t spi1_register_device(spi_device_t device);
+
+/* -------------------------------------------------------------------------- */
+
+//
+extern void spi1_exchange_block(uint8_t deviceID, uint8_t *block, uint8_t size);
 
 #endif

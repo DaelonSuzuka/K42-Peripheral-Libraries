@@ -1,24 +1,11 @@
 #include "spi.h"
-#include "os/logging.h"
 #include "os/system_time.h"
-#include "pins.h"
-#include "clc.h"
 #include "pic_header.h"
-#include "pps.h"
-static uint8_t LOG_LEVEL = L_SILENT;
 
 /* ************************************************************************** */
 
-void spi_init(pps_output_t *clockOutPin, pps_output_t *dataOutPin) {
-    // CLC setup
-    clc1_passthrough_init(CLC_SPI1_SCK);
-    clc2_passthrough_init(CLC_SPI1_SDO);
-
-    // PPS setup
-    pps_out_CLC1_OUTPUT(clockOutPin);
-    pps_out_CLC2_OUTPUT(dataOutPin);
-
-    SPI1CON0bits.BMODE = 1; // Bit-Longth Mode Select
+void spi1_init(spi_config_t config) {
+    SPI1CON0bits.BMODE = 1; // Bit-Length Mode Select
 
     SPI1CON1bits.CKE = 0;  // Output data changes on transition from
                            // idle to active clock state
@@ -39,47 +26,62 @@ void spi_init(pps_output_t *clockOutPin, pps_output_t *dataOutPin) {
     SPI1CON0bits.MST = 1; // Set as bus master
     SPI1CON0bits.EN = 1;  // Enable SPI module
 
-    log_register();
+}
+
+/* ************************************************************************** */
+
+static spi_device_t deviceRegistry[MAX_SPI_DEVICES];
+static uint8_t devices = 0;
+
+uint8_t spi1_register_device(spi_device_t device) {
+    deviceRegistry[devices] = device;
+
+    return devices++;
+}
+
+#define DEVICE deviceRegistry[deviceID]
+
+static void select_device(uint8_t deviceID) {
+    if (DEVICE.slaveSelect.useHardware) {
+        pps_unlock();
+        SPI1CON1bits.SSP = DEVICE.slaveSelect.polarity;
+        SPI1CON2bits.SSET = DEVICE.slaveSelect.enable;
+        pps_out_SPI1_SS(DEVICE.slaveSelect.pin);
+        pps_lock();
+    }
+}
+
+static void clear_device_selection(uint8_t deviceID) {
+    if (DEVICE.slaveSelect.useHardware) {
+        pps_unlock();
+        pps_out_LATCH(DEVICE.slaveSelect.pin);
+        pps_lock();
+    }
 }
 
 /* -------------------------------------------------------------------------- */
 
-void spi_tx_word(uint16_t data) {
-    LOG_TRACE({ println("spi_tx_word"); });
+void spi1_exchange_block(uint8_t deviceID, uint8_t *block, uint8_t size) {
+    select_device(deviceID);
 
-    // Two byte transfer count
-    SPI1TCNTL = 2;
-    SPI1TXB = (uint8_t)(data >> 8);   // high byte
-    SPI1TXB = (uint8_t)(data & 0xff); // low byte
-
-    while (SPI1STATUSbits.TXBE == 0) {
-        // Wait until SPI1TXB is empty
+    if (deviceRegistry[deviceID].prehook) {
+        deviceRegistry[deviceID].prehook();
     }
 
-    // TODO: Refactor this as soon as possible
-    // FP_STROBE_PIN = 0;
-    // delay_us(10);
-    // FP_STROBE_PIN = 1;
-}
+    uint8_t *data = block;
+    while (size--) {
+        SPI1TCNTL = 1;
+        SPI1TXB = *data;
+        while (!PIR3bits.SPI1RXIF) {
+            // wait for byte to finish
+        }
 
-void spi_tx_char(const char data) {
-    LOG_TRACE({ println("spi_tx_char"); });
-    LOG_DEBUG({ printf("byte: %d", data); });
-
-    // TODO: change this to use the hardware SPI FIFO buffer
-    // TODO: consider using a fast_ring_buffer for SPI output, like the UARTs
-    while (SPI1STATUSbits.TXBE == 0) {
-        // Wait until SPI1TXB is empty
+        *data++ = SPI1RXB;
     }
 
-    SPI1TCNTL = 1;
-    SPI1TXB = data;
-}
-
-void spi_tx_string(const char *string, uint16_t length) {
-    LOG_TRACE({ println("spi_tx_string"); });
-
-    for (uint16_t i = 0; i < length; i++) {
-        spi_tx_char(string[i]);
+    if (deviceRegistry[deviceID].posthook) {
+        deviceRegistry[deviceID].posthook();
     }
+
+    clear_device_selection(deviceID);
 }
