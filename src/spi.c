@@ -25,7 +25,6 @@ void spi1_init(spi_config_t config) {
 
     SPI1CON0bits.MST = 1; // Set as bus master
     SPI1CON0bits.EN = 1;  // Enable SPI module
-
 }
 
 /* ************************************************************************** */
@@ -60,6 +59,14 @@ static void clear_device_selection(uint8_t deviceID) {
 }
 
 /* -------------------------------------------------------------------------- */
+
+void spi1_write_byte(uint8_t data) {
+    SPI1TXB = data; //
+}
+
+uint8_t spi1_read_byte(void) {
+    return SPI1RXB; //
+}
 
 void spi1_exchange_block(uint8_t deviceID, uint8_t *block, uint8_t size) {
     select_device(deviceID);

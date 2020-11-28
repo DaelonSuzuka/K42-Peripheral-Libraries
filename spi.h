@@ -43,6 +43,12 @@ extern uint8_t spi1_register_device(spi_device_t device);
 /* -------------------------------------------------------------------------- */
 
 //
+extern void spi1_write_byte(uint8_t data);
+
+//
+extern uint8_t spi1_read_byte(void);
+
+//
 extern void spi1_exchange_block(uint8_t deviceID, uint8_t *block, uint8_t size);
 
 #endif
