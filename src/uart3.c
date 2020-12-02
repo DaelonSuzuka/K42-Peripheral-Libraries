@@ -183,6 +183,9 @@ uart_interface_t UART3_init(uart_config_t config) {
     U3CON0bits.TXEN = 1; // Transmit is enabled
     U3CON0bits.RXEN = 1; // Recieve is enabled
     U3CON0bits.MODE = config.mode;
+    if (config.mode == UART_MODE_ASYNC_9BIT_ADDRESS) {
+        UART3_rx_set_address_mask(0xff);
+    }
 
     U3RXIE = 1; // Enable UART3 Recieve Interrupt
 

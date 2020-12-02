@@ -114,6 +114,20 @@ uint8_t UART4_rx_available(void) {
 
 /* ************************************************************************** */
 
+void UART4_tx_set_address(uint16_t address) {
+    U4P1 = address; //
+}
+
+void UART4_rx_set_address(uint16_t address) {
+    U4P2 = address; //
+}
+
+void UART4_rx_set_address_mask(uint16_t mask) {
+    U4P3 = mask; //
+}
+
+/* ************************************************************************** */
+
 static uart_interface_t UART4_create(uart_config_t config) {
     uart_interface_t interface;
 
@@ -125,6 +139,9 @@ static uart_interface_t UART4_create(uart_config_t config) {
     interface.tx_char = UART4_tx_char;
     interface.rx_char = UART4_rx_char;
     interface.rx_available = UART4_rx_available;
+    interface.tx_set_address = UART4_tx_set_address;
+    interface.rx_set_address = UART4_rx_set_address;
+    interface.rx_set_address_mask = UART4_rx_set_address_mask;
 
     return interface;
 }
@@ -165,6 +182,10 @@ uart_interface_t UART4_init(uart_config_t config) {
     U4CON0bits.BRGS = 1; // Baud Rate is set to high speed
     U4CON0bits.TXEN = 1; // Transmit is enabled
     U4CON0bits.RXEN = 1; // Recieve is enabled
+    U4CON0bits.MODE = config.mode;
+    if (config.mode == UART_MODE_ASYNC_9BIT_ADDRESS) {
+        UART4_rx_set_address_mask(0xff);
+    }
 
     U4RXIE = 1; // Enable UART4 Recieve Interrupt
 

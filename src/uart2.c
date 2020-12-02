@@ -114,6 +114,20 @@ uint8_t UART2_rx_available(void) {
 
 /* ************************************************************************** */
 
+void UART2_tx_set_address(uint16_t address) {
+    U2P1 = address; //
+}
+
+void UART2_rx_set_address(uint16_t address) {
+    U2P2 = address; //
+}
+
+void UART2_rx_set_address_mask(uint16_t mask) {
+    U2P3 = mask; //
+}
+
+/* ************************************************************************** */
+
 static uart_interface_t UART2_create(uart_config_t config) {
     uart_interface_t interface;
 
@@ -125,6 +139,9 @@ static uart_interface_t UART2_create(uart_config_t config) {
     interface.tx_char = UART2_tx_char;
     interface.rx_char = UART2_rx_char;
     interface.rx_available = UART2_rx_available;
+    interface.tx_set_address = UART2_tx_set_address;
+    interface.rx_set_address = UART2_rx_set_address;
+    interface.rx_set_address_mask = UART2_rx_set_address_mask;
 
     return interface;
 }
@@ -165,6 +182,10 @@ uart_interface_t UART2_init(uart_config_t config) {
     U2CON0bits.BRGS = 1; // Baud Rate is set to high speed
     U2CON0bits.TXEN = 1; // Transmit is enabled
     U2CON0bits.RXEN = 1; // Recieve is enabled
+    U2CON0bits.MODE = config.mode;
+    if (config.mode == UART_MODE_ASYNC_9BIT_ADDRESS) {
+        UART2_rx_set_address_mask(0xff);
+    }
 
     U2RXIE = 1; // Enable UART2 Recieve Interrupt
 
