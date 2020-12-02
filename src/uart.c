@@ -16,6 +16,16 @@ uint8_t dummy_rx_available(void) {
     // intentionally empty body, must return something
     return 0;
 }
+void dummy_tx_set_address(uint16_t address) {
+    // intentionally empty body
+}
+void dummy_rx_set_address(uint16_t address) {
+    // intentionally empty body
+}
+void dummy_rx_set_address_mask(uint16_t mask) {
+    // intentionally empty body
+}
+
 /* ************************************************************************** */
 
 // return a UART config populated with default values
@@ -25,9 +35,10 @@ uart_config_t UART_get_config(uint8_t uartNumber) {
     config.number = uartNumber;
 
     // Default settings
-    config.baud = _9600; // 9600 baud
-    config.txPin = 0;    // no PPS selection
-    config.rxPin = 0;    // no PPS selection
+    config.baud = _9600;
+    config.txPin = 0; // no PPS selection
+    config.rxPin = 0; // no PPS selection
+    config.mode = UART_MODE_ASYNC_8BIT;
 
     return config;
 }

@@ -5,6 +5,20 @@
 #include <stdint.h>
 
 /* ************************************************************************** */
+
+typedef enum uart_modes {
+    UART_MODE_LIN_MASTER_SLAVE = 0b1100,
+    UART_MODE_LIN_SLAVE_ONLY = 0b1011,
+    UART_MODE_DMX = 0b1010,
+    UART_MODE_DALI_CONTROL_GEAR = 0b1001,
+    UART_MODE_DALI_CONTROL_DEVICE = 0b1000,
+    UART_MODE_ASYNC_9BIT_ADDRESS = 0b0100,
+    UART_MODE_ASYNC_8BIT_EVEN = 0b0011,
+    UART_MODE_ASYNC_8BIT_ODD = 0b0010,
+    UART_MODE_ASYNC_7BIT = 0b0001,
+    UART_MODE_ASYNC_8BIT = 0b0000,
+} uart_modes_t;
+
 // UART Baud rates
 typedef enum {
     _2400,
@@ -30,6 +44,7 @@ typedef struct {            // default settings
     pps_input_t rxPin;      // no PPS selection
     pps_output_t *txPin;    // no PPS selection
     uint8_t number;         // N/A
+    uart_modes_t mode;      // UART_MODE_ASYNC_8BIT
     char *tx_buffer;        // N/A
     uint8_t tx_buffer_size; // N/A
     char *rx_buffer;        // N/A
@@ -55,12 +70,8 @@ typedef struct {            // default settings
 
 #define create_uart_buffers(name, config, size)                                \
     do {                                                                       \
-        static char name##_tx_buffer[size];                                    \
-        static char name##_rx_buffer[size];                                    \
-        config.tx_buffer = name##_tx_buffer;                                   \
-        config.tx_buffer_size = size;                                          \
-        config.rx_buffer = name##_rx_buffer;                                   \
-        config.rx_buffer_size = size;                                          \
+        create_tx_buffer(name, config, size);                                  \
+        create_rx_buffer(name, config, size);                                  \
     } while (0);
 
 /* -------------------------------------------------------------------------- */
@@ -76,18 +87,27 @@ extern void dummy_tx_string(const char *string, const char terminator);
 extern void dummy_tx_char(char data);
 extern char dummy_rx_char(void);
 extern uint8_t dummy_rx_available(void);
+extern void dummy_tx_set_address(uint16_t address);
+extern void dummy_rx_set_address(uint16_t address);
+extern void dummy_rx_set_address_mask(uint16_t mask);
 
 typedef struct {
     void (*tx_string)(const char *, const char);
     void (*tx_char)(char);
     char (*rx_char)(void);
     uint8_t (*rx_available)(void);
+    void (*tx_set_address)(uint16_t address);
+    void (*rx_set_address)(uint16_t address);
+    void (*rx_set_address_mask)(uint16_t mask);
     uart_config_t config; // must be last so EMPTY_UART_INTERFACE() can work
 } uart_interface_t;
 
 #define EMPTY_UART_INTERFACE(name)                                             \
-    static uart_interface_t uart = {dummy_tx_string, dummy_tx_char,            \
-                                    dummy_rx_char, dummy_rx_available}
+    static uart_interface_t uart = {                                           \
+        dummy_tx_string,           dummy_tx_char,        dummy_rx_char,        \
+        dummy_rx_available,        dummy_tx_set_address, dummy_rx_set_address, \
+        dummy_rx_set_address_mask,                                             \
+    }
 
 /* ************************************************************************** */
 /*  UART configuration and initilization

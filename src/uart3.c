@@ -114,6 +114,20 @@ uint8_t UART3_rx_available(void) {
 
 /* ************************************************************************** */
 
+void UART3_tx_set_address(uint16_t address) {
+    U3P1 = address; //
+}
+
+void UART3_rx_set_address(uint16_t address) {
+    U3P2 = address; //
+}
+
+void UART3_rx_set_address_mask(uint16_t mask) {
+    U3P3 = mask; //
+}
+
+/* ************************************************************************** */
+
 static uart_interface_t UART3_create(uart_config_t config) {
     uart_interface_t interface;
 
@@ -125,6 +139,9 @@ static uart_interface_t UART3_create(uart_config_t config) {
     interface.tx_char = UART3_tx_char;
     interface.rx_char = UART3_rx_char;
     interface.rx_available = UART3_rx_available;
+    interface.tx_set_address = UART3_tx_set_address;
+    interface.rx_set_address = UART3_rx_set_address;
+    interface.rx_set_address_mask = UART3_rx_set_address_mask;
 
     return interface;
 }
@@ -165,6 +182,7 @@ uart_interface_t UART3_init(uart_config_t config) {
     U3CON0bits.BRGS = 1; // Baud Rate is set to high speed
     U3CON0bits.TXEN = 1; // Transmit is enabled
     U3CON0bits.RXEN = 1; // Recieve is enabled
+    U3CON0bits.MODE = config.mode;
 
     U3RXIE = 1; // Enable UART3 Recieve Interrupt
 
