@@ -39,17 +39,24 @@ typedef enum {
     below. If different settings are desired, they can be overwrittenbefore the
     config is given to UART_init().
 */
-typedef struct {            // default settings
-    baud_rate_t baud;       // 9600 baud
-    pps_input_t rxPin;      // no PPS selection
-    pps_output_t *txPin;    // no PPS selection
-    uint8_t number;         // N/A
-    uart_modes_t mode;      // UART_MODE_ASYNC_8BIT
-    char *tx_buffer;        // N/A
-    uint8_t tx_buffer_size; // N/A
-    char *rx_buffer;        // N/A
-    uint8_t rx_buffer_size; // N/A
+typedef struct {              // default settings
+    uint8_t number;           // N/A
+    baud_rate_t baud;         // 9600 baud
+    uart_modes_t mode;        // UART_MODE_ASYNC_8BIT
+    pps_input_t rxPin;        // no PPS selection
+    pps_output_t *txPin;      // no PPS selection
+    char *tx_buffer;          // N/A
+    uint8_t tx_buffer_size;   // N/A
+    char *rx_buffer;          // N/A
+    uint8_t rx_buffer_size;   // N/A
+    uint16_t tx_address;      // N/A
+    uint16_t rx_address;      // N/A
+    uint16_t rx_address_mask; // N/A
 } uart_config_t;
+
+// return a UART config populated with default values
+#define UART_get_config(uartNumber)                                            \
+    { uartNumber, _9600, UART_MODE_ASYNC_8BIT }
 
 /* ************************************************************************** */
 // UART buffer helper macros
@@ -99,7 +106,7 @@ typedef struct {
     void (*tx_set_address)(uint16_t address);
     void (*rx_set_address)(uint16_t address);
     void (*rx_set_address_mask)(uint16_t mask);
-    uart_config_t config; // must be last so EMPTY_UART_INTERFACE() can work
+    uart_config_t *config; // must be last so EMPTY_UART_INTERFACE() can work
 } uart_interface_t;
 
 #define EMPTY_UART_INTERFACE(name)                                             \
@@ -139,10 +146,10 @@ typedef struct {
     module_init(uart);
 */
 // Return a config object with default values
-extern uart_config_t UART_get_config(uint8_t uartNumber);
+// extern uart_config_t UART_get_config(uint8_t uartNumber);
 
 // Accepts a config object and returns a uart interface object
-extern uart_interface_t UART_init(uart_config_t config);
+extern uart_interface_t UART_init(uart_config_t *config);
 
 /* ************************************************************************** */
 /*  Using UART interface objects
