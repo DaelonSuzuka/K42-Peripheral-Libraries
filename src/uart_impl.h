@@ -63,7 +63,12 @@ void LONG(_tx_char)(char data) {
 // UART receive
 
 void __interrupt(irq(SHORT(RX)), high_priority) LONG(_rx_ISR)() {
-    rx_buffer_write(SHORT(RXB));
+    if (SHORT(ERRIRbits.PERIF)) {
+        char trashcan = SHORT(RXB);
+        SHORT(ERRIRbits.PERIF) = 0;
+    } else {
+        rx_buffer_write(SHORT(RXB));
+    }
 }
 
 char LONG(_rx_char)(void) {
