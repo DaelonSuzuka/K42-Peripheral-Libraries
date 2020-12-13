@@ -163,15 +163,29 @@ uint16_t adc_read(uint8_t channel) {
     LOG_TRACE({ println("adc_read"); });
 
     uint16_t measurement = 0;
+    uint16_t sampleCount = 0;
 
     while (1) {
         measurement = adc_convert(channel, maxVoltage[channel]);
+        sampleCount++;
+
+        if (sampleCount > 5) {
+            if (measurement > 3900) {
+                if (maxVoltage[channel] < _5000mV) {
+                    maxVoltage[channel]++;
+                    measurement = adc_convert(channel, maxVoltage[channel]);
+                }
+            }
+            break;
+        }
 
         LOG_DEBUG({
             printf("channel: %d, ", channel);
+            printf("sample#: % 4u, ", sampleCount);
             printf("maxVoltage: %d, ", maxVoltage[channel]);
-            printf("raw: %u, ",  measurement);
-            printf("adjusted: %u",  convert_to_millivolts(measurement, maxVoltage[channel]));
+            printf("raw: % 4u, ", measurement);
+            printf("adjusted: % 4u",
+                   convert_to_millivolts(measurement, maxVoltage[channel]));
             println("");
         });
 
