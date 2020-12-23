@@ -140,6 +140,7 @@ static const uint16_t baudTable[] = {
     138,  // 115200
     68,   // 230400
     34,   // 460800
+    17,   // 921600
 };
 
 static void LONG(_baud_select)(baud_rate_t baudRate) {
