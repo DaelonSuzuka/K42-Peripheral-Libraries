@@ -119,6 +119,8 @@ void pps_in_UART2_CTS(pps_input_t pin) { U2CTSPPS = pin; }
 #ifdef U3RXPPS
 void pps_in_UART3_RX(pps_input_t pin) { U3RXPPS = pin; }
 void pps_in_UART3_CTS(pps_input_t pin) { U3CTSPPS = pin; }
+#endif
+#ifdef U4RXPPS
 void pps_in_UART4_RX(pps_input_t pin) { U4RXPPS = pin; }
 void pps_in_UART4_CTS(pps_input_t pin) { U4CTSPPS = pin; }
 void pps_in_UART5_RX(pps_input_t pin) { U5RXPPS = pin; }
