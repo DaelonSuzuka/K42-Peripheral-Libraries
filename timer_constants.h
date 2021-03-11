@@ -104,7 +104,6 @@ enum timer_postscale {
     TMR_POSTSCALE_16 = 15,
 };
 
-
 /* ************************************************************************** */
 // old style, left for compatibility
 
