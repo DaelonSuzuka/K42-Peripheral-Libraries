@@ -33,6 +33,11 @@ void nonvolatile_memory_init(void) {
 
 /* ************************************************************************** */
 
+#if FAMILY_K42
+
+
+#else
+
 void nvm_activate(NVM_address_t address, enum nvm_operations operation) {
     NVMCON1bits.NVMCMD = operation;
 
@@ -60,7 +65,49 @@ void nvm_activate(NVM_address_t address, enum nvm_operations operation) {
     NVMCON1bits.NVMCMD = NVM_READ; // reset the operation for safety
 }
 
+#endif
+
 /* ************************************************************************** */
+
+#if FAMILY_K42
+
+uint8_t internal_eeprom_read(uint16_t address) {
+    LOG_TRACE({ println("eeprom_read"); });
+
+    NVMADRH = address >> 8;
+    NVMADRL = address;
+
+    SELECT_EEPROM();
+
+    // Initiate read operation
+    NVMCON1bits.RD = 1;
+
+    // Return the value
+    return NVMDAT;
+}
+
+void internal_eeprom_write(uint16_t address, uint8_t data) {
+    LOG_TRACE({ println("eeprom_write"); });
+    // Wait for possible previous write to complete
+    if (NVMCON1bits.WR) {
+        LOG_DEBUG({ println("previous write not finished"); });
+        while (NVMCON1bits.WR) {
+        }
+    }
+
+    NVMADRH = address >> 8;
+    NVMADRL = address;
+
+    // Load data into register
+    NVMDAT = data;
+
+    // Engage
+    SELECT_EEPROM();
+    NVM_WRITE_MODE();
+    nvm_write();
+}
+
+#else
 
 uint8_t internal_eeprom_read(NVM_address_t address) {
     if (address < EEPROM_BASE_ADDRESS) {
@@ -77,6 +124,8 @@ void internal_eeprom_write(NVM_address_t address, uint8_t data) {
     NVMDATL = data;
     nvm_activate(address, NVM_WRITE);
 }
+
+#endif
 
 /* ************************************************************************** */
 
@@ -136,22 +185,8 @@ void print_flash_buffer(NVM_address_t address, uint8_t *buffer) {
 
 /* ************************************************************************** */
 
+// TODO: this address has to change between chips
 uint8_t flashBuffer[FLASH_BUFFER_SIZE] __at(0x2500);
-
-// 
-void flash_read_page(NVM_address_t address) {
-    nvm_activate(address, NVM_READ_PAGE); //
-}
-
-// 
-void flash_erase_page(NVM_address_t address) {
-    nvm_activate(address, NVM_ERASE_PAGE); //
-}
-
-// 
-void flash_write_page(NVM_address_t address) {
-    nvm_activate(address, NVM_WRITE_PAGE); //
-}
 
 // 
 void flash_read_block(NVM_address_t address, uint8_t *destination) {

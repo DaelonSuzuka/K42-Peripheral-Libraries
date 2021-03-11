@@ -69,15 +69,6 @@ extern void print_flash_buffer(NVM_address_t address, uint8_t *buffer);
 
 extern uint8_t flashBuffer[FLASH_BUFFER_SIZE];
 
-//
-extern void flash_read_page(NVM_address_t address);
-
-//
-extern void flash_erase_page(NVM_address_t address);
-
-//
-extern void flash_write_page(NVM_address_t address);
-
 // 
 extern void flash_read_block(NVM_address_t address, uint8_t *destination);
 
