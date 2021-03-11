@@ -64,9 +64,49 @@ enum timer_2_clock_source {
     TMR2_CLK_PPS = 0b00000,
 };
 
-// Timer 0 clock sources
-
 /* -------------------------------------------------------------------------- */
+
+enum timer_prescale {
+    TMR_PRESCALE_1 = 0,
+    TMR_PRESCALE_2 = 1,
+    TMR_PRESCALE_4 = 2,
+    TMR_PRESCALE_8 = 3,
+    TMR_PRESCALE_16 = 4,
+    TMR_PRESCALE_32 = 5,
+    TMR_PRESCALE_64 = 6,
+    TMR_PRESCALE_128 = 7,
+    TMR_PRESCALE_256 = 8,
+    TMR_PRESCALE_512 = 9,
+    TMR_PRESCALE_1024 = 10,
+    TMR_PRESCALE_2048 = 11,
+    TMR_PRESCALE_4096 = 12,
+    TMR_PRESCALE_8192 = 13,
+    TMR_PRESCALE_16384 = 14,
+    TMR_PRESCALE_32768 = 15,
+};
+
+enum timer_postscale {
+    TMR_POSTSCALE_1 = 0,
+    TMR_POSTSCALE_2 = 1,
+    TMR_POSTSCALE_3 = 2,
+    TMR_POSTSCALE_4 = 3,
+    TMR_POSTSCALE_5 = 4,
+    TMR_POSTSCALE_6 = 5,
+    TMR_POSTSCALE_7 = 6,
+    TMR_POSTSCALE_8 = 7,
+    TMR_POSTSCALE_9 = 8,
+    TMR_POSTSCALE_10 = 9,
+    TMR_POSTSCALE_11 = 10,
+    TMR_POSTSCALE_12 = 11,
+    TMR_POSTSCALE_13 = 12,
+    TMR_POSTSCALE_14 = 13,
+    TMR_POSTSCALE_15 = 14,
+    TMR_POSTSCALE_16 = 15,
+};
+
+
+/* ************************************************************************** */
+// old style, left for compatibility
 
 // Shared timer prescale values
 #define TMR_PRE_1_1 0
