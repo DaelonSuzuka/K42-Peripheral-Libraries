@@ -79,7 +79,7 @@ void spi1_exchange_block(uint8_t deviceID, uint8_t *block, uint8_t size) {
     while (size--) {
         SPI1TCNTL = 1;
         SPI1TXB = *data;
-        while (!PIR3bits.SPI1RXIF) {
+        while (!SPI1RXIF) {
             // wait for byte to finish
         }
 
