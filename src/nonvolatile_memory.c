@@ -7,6 +7,7 @@
 static uint8_t LOG_LEVEL = L_SILENT;
 
 /* ************************************************************************** */
+#ifdef DEVELOPMENT
 // this prints all the relevant macros defined by the compiler, for debug
 static void print_configuration_data(void) {
     println("");
@@ -22,13 +23,15 @@ static void print_configuration_data(void) {
     printf("FLASH_BLOCK_MASK: %lu\r\n", FLASH_BLOCK_MASK);
     printf("FLASH_ELEMENT_MASK: %u\r\n", FLASH_ELEMENT_MASK);
 }
+#endif
 
 void nonvolatile_memory_init(void) {
     //
     log_register();
 
-    //
+#ifdef DEVELOPMENT
     LOG_DEBUG({ print_configuration_data(); });
+#endif
 }
 
 /* ************************************************************************** */
@@ -512,7 +515,7 @@ void print_flash_buffer(NVM_address_t address, uint8_t *buffer) {
 // TODO: this address has to change between chips
 uint8_t flashBuffer[FLASH_BUFFER_SIZE] __at(0x2500);
 
-// 
+//
 void flash_read_block(NVM_address_t address, uint8_t *destination) {
     nvm_activate(address, NVM_READ_PAGE);
 
@@ -523,12 +526,12 @@ void flash_read_block(NVM_address_t address, uint8_t *destination) {
     }
 }
 
-// 
+//
 void flash_erase_block(NVM_address_t address) {
     nvm_activate(address, NVM_ERASE_PAGE); //
 }
 
-// 
+//
 void flash_write_block(NVM_address_t address, uint8_t *source) {
     if (source && (source != &flashBuffer)) {
         for (uint16_t i = 0; i < FLASH_BUFFER_SIZE; i++) {
