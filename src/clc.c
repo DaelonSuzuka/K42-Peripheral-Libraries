@@ -4,7 +4,7 @@
 
 /* ************************************************************************** */
 
-#if FAMILY_Q43 || FAMILY_Q84
+#if FAMILY_Q43 || FAMILY_Q84 || FAMILY_Q41
 void clc_passthrought_init(uint8_t clc_number, uint8_t dataInput) {
     CLCSELECT = clc_number;
 
@@ -29,7 +29,7 @@ void clc_passthrought_init(uint8_t clc_number, uint8_t dataInput) {
 /* ************************************************************************** */
 
 void clc1_passthrough_init(uint8_t dataInput) {
-#if FAMILY_Q43 || FAMILY_Q84
+#if FAMILY_Q43 || FAMILY_Q84 || FAMILY_Q41
     clc_passthrought_init(0, dataInput);
 #else
     CLC1GLS0 = 0b00000010;
@@ -53,7 +53,7 @@ void clc1_passthrough_init(uint8_t dataInput) {
 /* -------------------------------------------------------------------------- */
 
 void clc2_passthrough_init(uint8_t dataInput) {
-#if FAMILY_Q43 || FAMILY_Q84
+#if FAMILY_Q43 || FAMILY_Q84 || FAMILY_Q41
     clc_passthrought_init(1, dataInput);
 #else
     CLC2GLS0 = 0b00000010;
@@ -77,7 +77,7 @@ void clc2_passthrough_init(uint8_t dataInput) {
 /* -------------------------------------------------------------------------- */
 
 void clc3_passthrough_init(uint8_t dataInput) {
-#if FAMILY_Q43 || FAMILY_Q84
+#if FAMILY_Q43 || FAMILY_Q84 || FAMILY_Q41
     clc_passthrought_init(2, dataInput);
 #else
     CLC3GLS0 = 0b00000010;
@@ -101,7 +101,7 @@ void clc3_passthrough_init(uint8_t dataInput) {
 /* -------------------------------------------------------------------------- */
 
 void clc4_passthrough_init(uint8_t dataInput) {
-#if FAMILY_Q43 || FAMILY_Q84
+#if FAMILY_Q43 || FAMILY_Q84 || FAMILY_Q41
     clc_passthrought_init(3, dataInput);
 #else
     CLC4GLS0 = 0b00000010;
