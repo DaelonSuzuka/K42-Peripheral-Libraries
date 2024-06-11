@@ -29,17 +29,25 @@ void pps_in_TIMER1_CLOCK(pps_input_t pin) { T1CKIPPS = pin; }
 void pps_in_TIMER1_GATE(pps_input_t pin) { T1GPPS = pin; }
 void pps_in_TIMER3_CLOCK(pps_input_t pin) { T3CKIPPS = pin; }
 void pps_in_TIMER3_GATE(pps_input_t pin) { T3GPPS = pin; }
+#ifdef T5CON
 void pps_in_TIMER5_CLOCK(pps_input_t pin) { T5CKIPPS = pin; }
 void pps_in_TIMER5_GATE(pps_input_t pin) { T5GPPS = pin; }
+#endif
 void pps_in_TIMER2_CLOCK(pps_input_t pin) { T2INPPS = pin; }
 void pps_in_TIMER4_CLOCK(pps_input_t pin) { T4INPPS = pin; }
+#ifdef T6CON
 void pps_in_TIMER6_CLOCK(pps_input_t pin) { T6INPPS = pin; }
+#endif
 
 /* -------------------------------------------------------------------------- */
 
 void pps_in_CCP1(pps_input_t pin) { CCP1PPS = pin; }
+#ifdef CCP2PPS
 void pps_in_CCP2(pps_input_t pin) { CCP2PPS = pin; }
+#endif
+#ifdef CCP3PPS
 void pps_in_CCP3(pps_input_t pin) { CCP3PPS = pin; }
+#endif
 #ifdef CCP4PPS
 void pps_in_CCP4(pps_input_t pin) { CCP4PPS = pin; }
 #endif
@@ -63,7 +71,11 @@ void pps_in_SMT1_SIGNAL(pps_input_t pin) { SMT1SIGPPS = pin; }
 
 #ifdef CWG1PPS
 void pps_in_CWG1(pps_input_t pin) { CWG1PPS = pin; }
+#endif
+#ifdef CWG2PPS
 void pps_in_CWG2(pps_input_t pin) { CWG2PPS = pin; }
+#endif
+#ifdef CWG3PPS
 void pps_in_CWG3(pps_input_t pin) { CWG3PPS = pin; }
 #endif
 
@@ -123,6 +135,8 @@ void pps_in_UART3_CTS(pps_input_t pin) { U3CTSPPS = pin; }
 #ifdef U4RXPPS
 void pps_in_UART4_RX(pps_input_t pin) { U4RXPPS = pin; }
 void pps_in_UART4_CTS(pps_input_t pin) { U4CTSPPS = pin; }
+#endif
+#ifdef U5RXPPS
 void pps_in_UART5_RX(pps_input_t pin) { U5RXPPS = pin; }
 void pps_in_UART5_CTS(pps_input_t pin) { U5CTSPPS = pin; }
 #endif
@@ -137,18 +151,22 @@ void pps_out_ADC_GUARD_RING_A(pps_output_t *pin) { *pin = PPS_ADGRDA; }
 /* -------------------------------------------------------------------------- */
 // Complementary Waveform Generator 3
 
+#ifdef PPS_CWG3A
 void pps_out_CWG3D(pps_output_t *pin) { *pin = PPS_CWG3D; }
 void pps_out_CWG3C(pps_output_t *pin) { *pin = PPS_CWG3C; }
 void pps_out_CWG3B(pps_output_t *pin) { *pin = PPS_CWG3B; }
 void pps_out_CWG3A(pps_output_t *pin) { *pin = PPS_CWG3A; }
+#endif
 
 /* -------------------------------------------------------------------------- */
 // Complementary Waveform Generator 2
 
+#ifdef PPS_CWG2A
 void pps_out_CWG2D(pps_output_t *pin) { *pin = PPS_CWG2D; }
 void pps_out_CWG2C(pps_output_t *pin) { *pin = PPS_CWG2C; }
 void pps_out_CWG2B(pps_output_t *pin) { *pin = PPS_CWG2B; }
 void pps_out_CWG2A(pps_output_t *pin) { *pin = PPS_CWG2A; }
+#endif
 
 /* -------------------------------------------------------------------------- */
 // Complementary Waveform Generator 1
@@ -275,8 +293,12 @@ void pps_out_PWM1S1P1(pps_output_t *pin) { *pin = PPS_PWM1S1P1_OUT; }
 #ifdef PPS_CCP4
 void pps_out_CCP4(pps_output_t *pin) { *pin = PPS_CCP4; }
 #endif
+#ifdef PPS_CCP3
 void pps_out_CCP3(pps_output_t *pin) { *pin = PPS_CCP3; }
+#endif
+#ifdef PPS_CCP2
 void pps_out_CCP2(pps_output_t *pin) { *pin = PPS_CCP2; }
+#endif
 void pps_out_CCP1(pps_output_t *pin) { *pin = PPS_CCP1; }
 
 /* -------------------------------------------------------------------------- */
