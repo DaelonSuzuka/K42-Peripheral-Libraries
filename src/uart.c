@@ -1,4 +1,5 @@
 #include "uart.h"
+#include "pic_family.h"
 
 /* ************************************************************************** */
 // UART dummy functions
@@ -33,7 +34,8 @@ extern uart_interface_t UART1_init(uart_config_t *config);
 extern uart_interface_t UART2_init(uart_config_t *config);
 #if FAMILY_Q43 || FAMILY_Q84 || FAMILY_Q41
 extern uart_interface_t UART3_init(uart_config_t *config);
-#elif FAMILY_Q43 || FAMILY_Q84
+#endif
+#if FAMILY_Q43 || FAMILY_Q84
 extern uart_interface_t UART4_init(uart_config_t *config);
 extern uart_interface_t UART5_init(uart_config_t *config);
 #endif
@@ -47,7 +49,8 @@ uart_interface_t UART_init(uart_config_t *config) {
 #if FAMILY_Q43 || FAMILY_Q84 || FAMILY_Q41
     case 3:
         return UART3_init(config);
-#elif FAMILY_Q43 || FAMILY_Q84
+#endif
+#if FAMILY_Q43 || FAMILY_Q84
     case 4:
         return UART4_init(config);
     case 5:

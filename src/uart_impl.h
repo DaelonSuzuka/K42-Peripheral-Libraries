@@ -141,15 +141,20 @@ static const uint16_t baudTable[] = {
     68,   // 230400
     34,   // 460800
     17,   // 921600
-    15,   // 1000000
-    12,   // 1230000
-    11,   // 1333333
-    10,   // 1454545
-    9,    // 1600000
+    15,   // 1,000,000
+    12,   // 1,230,000
+    11,   // 1,333,333
+    10,   // 1,454,545
+    9,    // 1,600,000
+    7,    // 2,000,000
+    4,    // 3.200,000
+    3,    // 4,000,000
+    1,    // 8,000,000
+    0,    // 16,000,000
 };
 
 static void LONG(_baud_select)(baud_rate_t baudRate) {
-    SHORT(BRG) = baudTable[baudRate];
+    SHORT(BRG) = baudTable[baudRate]; //
 }
 
 static void LONG(_pps_init)(void) {
@@ -184,14 +189,20 @@ uart_interface_t LONG(_init)(uart_config_t *config) {
     rx_buffer_init(_config->rx_buffer, _config->rx_buffer_size);
 
     SHORT(CON0bits).BRGS = 1; // Baud Rate is set to high speed
-    SHORT(CON0bits).TXEN = 1; // Transmit is enabled
-    SHORT(CON0bits).RXEN = 1; // Recieve is enabled
+    if (_config->txPin) {
+        SHORT(CON0bits).TXEN = 1; // Transmit is enabled
+    }
+    if (_config->rxPin) {
+        SHORT(CON0bits).RXEN = 1; // Recieve is enabled
+    }
     SHORT(CON0bits).MODE = _config->mode;
     if (_config->mode == UART_MODE_ASYNC_9BIT_ADDRESS) {
         LONG(_rx_set_address_mask)(0xff);
     }
 
-    SHORT(RXIE) = 1; // Enable UART Recieve Interrupt
+    if (_config->rxPin) {
+        SHORT(RXIE) = 1; // Enable UART Recieve Interrupt
+    }
 
     SHORT(CON1bits).ON = 1; // Enable UART
 
