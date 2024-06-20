@@ -1,5 +1,4 @@
 #include "adc.h"
-#include "fixed_voltage_reference.h"
 #include "os/logging.h"
 #include "pic_header.h"
 static uint8_t LOG_LEVEL = L_SILENT;
@@ -39,13 +38,6 @@ void adc_init(void) {
 #else
 #define NUM_OF_CHANNELS 23 + 1
 #endif
-
-typedef enum {
-    _1024mV = FVR_GAIN_1X,
-    _2048mV = FVR_GAIN_2X,
-    _4096mV = FVR_GAIN_4X,
-    _5000mV,
-} adc_scale_settings_t;
 
 //
 // #define _1024mV FVR_GAIN_1X
@@ -123,16 +115,16 @@ static uint8_t maxVoltage[NUM_OF_CHANNELS] = {
 #define adc_select_channel(channel) ADPCH = channel
 
 //! Warning - input not sanitized
-static void adc_select_scale(uint8_t scale) {
+static void adc_select_scale(adc_scale_t scale) {
     if (scale < _5000mV) {
         ADREFbits.PREF = ADREF_PREF_FVR;
-        fvr_set_adc_buffer_gain(scale);
+        fvr_set_adc_buffer_gain((uint8_t)scale);
     } else {
         ADREFbits.PREF = ADREF_PREF_VDD;
     }
 }
 
-uint16_t adc_convert(uint8_t channel, uint8_t scale) {
+uint16_t adc_convert(uint8_t channel, adc_scale_t scale) {
     adc_select_channel(channel);
     adc_select_scale(scale);
 
@@ -147,7 +139,7 @@ uint16_t adc_convert(uint8_t channel, uint8_t scale) {
 
 /* -------------------------------------------------------------------------- */
 
-uint16_t convert_to_millivolts(uint16_t measurement, uint8_t scale) {
+uint16_t convert_to_millivolts(uint16_t measurement, adc_scale_t scale) {
     if (scale == _1024mV) {
         measurement /= 4;
     } else if (scale == _2048mV) {
