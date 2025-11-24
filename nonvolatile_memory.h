@@ -1,6 +1,7 @@
 #ifndef _NONVOLATILE_MEMORY_H_
 #define _NONVOLATILE_MEMORY_H_
 
+#include "pic_family.h"
 #include <stdint.h>
 
 /* ************************************************************************** */
@@ -42,10 +43,14 @@ extern void internal_eeprom_write(NVM_address_t address, uint8_t data);
 #define FLASH_SIZE _ROMSIZE
 
 // _FLASH_ERASE_SIZE is compiler-defined as the erase row size, in words
-#define FLASH_ERASE_BLOCKSIZE _FLASH_ERASE_SIZE * 2
+#if FAMILY_K42
+    #define FLASH_ERASE_BLOCKSIZE _FLASH_ERASE_SIZE
+#else
+    #define FLASH_ERASE_BLOCKSIZE _FLASH_ERASE_SIZE * 2
 
+#endif
 // _FLASH_WRITE_SIZE is compiler-defined as the write row size, in words
-#define FLASH_WRITE_BLOCKSIZE _FLASH_WRITE_SIZE 
+#define FLASH_WRITE_BLOCKSIZE _FLASH_WRITE_SIZE
 
 // The size of the array you need in order to do flash block operations
 #define FLASH_BUFFER_SIZE FLASH_ERASE_BLOCKSIZE
@@ -59,8 +64,7 @@ extern void internal_eeprom_write(NVM_address_t address, uint8_t data);
 // I've forgotten to do this cast one too many times, so now there's this macro
 // to make sure we can't forget.
 #define print_nvm_address(address) printf("address: %lu ", (uint32_t)address)
-#define print_nvm_address_ln(address)                                          \
-    printf("address: %lu \r\n", (uint32_t)address)
+#define print_nvm_address_ln(address) printf("address: %lu \r\n", (uint32_t)address)
 
 extern void print_flash_block(NVM_address_t address);
 extern void print_flash_buffer(NVM_address_t address, uint8_t *buffer);
@@ -69,13 +73,13 @@ extern void print_flash_buffer(NVM_address_t address, uint8_t *buffer);
 
 extern uint8_t flashBuffer[FLASH_BUFFER_SIZE];
 
-// 
+//
 extern void flash_read_block(NVM_address_t address, uint8_t *destination);
 
-// 
+//
 extern void flash_erase_block(NVM_address_t address);
 
-// 
+//
 extern void flash_write_block(NVM_address_t address, uint8_t *source);
 
 /* ************************************************************************** */
