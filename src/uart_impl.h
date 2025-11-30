@@ -209,8 +209,8 @@ uart_interface_t LONG(_init)(uart_config_t *config) {
     return LONG(_create)();
 }
 
-#undef JOIN(x, y)
-#undef JOIN_AGAIN(x, y)
+#undef JOIN
+#undef JOIN_AGAIN
 
-#undef SHORT(x)
-#undef LONG(x)
+#undef SHORT
+#undef LONG
