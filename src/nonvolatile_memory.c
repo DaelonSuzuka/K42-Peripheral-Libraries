@@ -115,8 +115,8 @@ void internal_eeprom_write(NVM_address_t address, uint8_t data) {
         }
     }
 
-    NVMADRH = address >> 8;
-    NVMADRL = address;
+    NVMADRH = (uint8_t)(address >> 8);
+    NVMADRL = (uint8_t)address;
 
     // Load data into register
     NVMDAT = data;

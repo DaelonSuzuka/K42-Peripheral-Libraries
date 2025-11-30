@@ -129,7 +129,7 @@ uint16_t adc_convert(uint8_t channel, adc_scale_t scale) {
     adc_select_scale(scale);
 
     // Engage
-    ADCON0bits.GO = 1;
+    ADCON0bits.GO = 1U;
     while (ADCON0bits.GO) {
         // Wait for the conversion to finish
     }
@@ -141,11 +141,11 @@ uint16_t adc_convert(uint8_t channel, adc_scale_t scale) {
 
 uint16_t convert_to_millivolts(uint16_t measurement, adc_scale_t scale) {
     if (scale == _1024mV) {
-        measurement /= 4;
+        measurement /= 4U;
     } else if (scale == _2048mV) {
-        measurement /= 2;
+        measurement /= 2U;
     } else if (scale == _5000mV) {
-        float temp = (float)measurement * 1.22;
+        float temp = (float)measurement * 1.22f;
         measurement = (uint16_t)temp;
     }
     return measurement;
