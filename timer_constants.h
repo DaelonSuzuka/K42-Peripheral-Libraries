@@ -16,7 +16,7 @@ enum timer_0_clock_source {
     TMR0_CLK_CLC1 = 7,
 };
 
-#if FAMILY_Q43 || FAMILY_Q84
+#if FAMILY_Q43 || FAMILY_Q84 || FAMILY_Q41
 
 enum timer_1_clock_source {
     TMR1_CLK_CLC8 = 0b10101,
