@@ -122,13 +122,19 @@ The "passthrough" init is a PPS routing workaround. The PPS output matrix doesn'
 
 **Typo:** `clc_passthrought_init()` — consistent in both declaration and definition. Named by the author so all callers use the same spelling. Works fine. Fixing would be a shared-path change affecting all projects.
 
+## SPI
+
 `spi.c` is a half-implementation. Only send-only (shift register) use has been tested. `spi1_exchange_block()` has blocking busy-wait loops — would need ISR + buffer architecture (like UART) for true bidirectional use. The prehook/posthook device pattern works well for device-specific setup/teardown. The device registry (`spi1_register_device()`) returns an ID for use with `spi1_exchange_block()`.
 
 ## FVR Settle Time
 
 Both `fvr_set_adc_buffer_gain()` and `fvr_set_comparator_buffer_gain()` busy-wait on `FVRCONbits.RDY` before returning. The settle time is fast enough that this doesn't cause problems, even when the ADC auto-ranger calls these on every scale change. The blocking is priced in.
 
-## Known Q41 Gaps
+## Design Philosophy
+
+This library is **usage-driven**. Implementations reflect actual project needs, not hypothetical ones. Several peripherals are stubs or half-implemented (SPI, PMD, HLVD). That's not neglect — it's discipline. Speculating about future needs is a design risk: you ship bugs you'll never hit, create maintenance burden across chip families, and waste flash on dead code. Implement when you need it. Not before.
+
+The CLC is the perfect example: it's a tiny FPGA built into the PIC, and the library only supports passthrough mode — literally using it as a wire. That's all any project has ever needed. A general-purpose CLC configuration API would be speculative complexity.
 
 These libs were built for K42 first. Q41/Q43 support added incrementally. Untested code paths on non-K42 chips are likely buggy. Always verify family-specific behavior.
 
