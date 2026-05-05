@@ -112,6 +112,14 @@ The ADC driver is fundamentally an FVR consumer. `adc_init()` enables the FVR im
 
 `adc_read()` does auto-ranging: starts at 4X FVR gain, drops gain if reading is too low (better resolution), bumps to VDD reference if too high (wider range). Per channel, per reading. The FVR isn't "coupled" to the ADC — it IS the ADC's reference strategy.
 
+## SPI
+
+`spi.c` is a half-implementation. Only send-only (shift register) use has been tested. `spi1_exchange_block()` has blocking busy-wait loops — would need ISR + buffer architecture (like UART) for true bidirectional use. The prehook/posthook device pattern works well for device-specific setup/teardown. The device registry (`spi1_register_device()`) returns an ID for use with `spi1_exchange_block()`.
+
+## FVR Settle Time
+
+Both `fvr_set_adc_buffer_gain()` and `fvr_set_comparator_buffer_gain()` busy-wait on `FVRCONbits.RDY` before returning. The settle time is fast enough that this doesn't cause problems, even when the ADC auto-ranger calls these on every scale change. The blocking is priced in.
+
 ## Known Q41 Gaps
 
 These libs were built for K42 first. Q41/Q43 support added incrementally. Untested code paths on non-K42 chips are likely buggy. Always verify family-specific behavior.
@@ -119,7 +127,7 @@ These libs were built for K42 first. Q41/Q43 support added incrementally. Untest
 ### By Severity
 
 **High:**
-- `numerically_controlled_oscillator.h`: NCO2/NCO3 functions declared unconditionally — Q41 only has NCO1
+- `numerically_controlled_oscillator.h`: NCO2/NCO3 function declarations are unguarded — Q41 only has NCO1. However, the `.c` implementations ARE guarded with `#if FAMILY_Q43 || FAMILY_Q84`, so calling nco2/nco3 on Q41 produces a link error, not a silent runtime bug. Fix: add the same `#if` guard to the header declarations.
 
 **Medium:**
 - `signal_measurement_timer.h`: `smt_window_input` enum shared across families, includes Q41-absent peripherals (CLC5-8, PWM5-8, CCP4, CMP2)
