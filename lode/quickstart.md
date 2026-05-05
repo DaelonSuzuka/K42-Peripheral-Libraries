@@ -82,6 +82,30 @@ The project is the composition root: it creates the config, allocates the buffer
 
 `pic_family.h` defines `FAMILY_K42`, `FAMILY_Q41`, `FAMILY_Q43`, `FAMILY_Q84`. Use these when behavior differs between chips (like NVM erase block sizing). Adding a new branch is safe; changing shared paths is risky.
 
+### Two Portability Strategies
+
+The library uses two approaches to handle chip differences:
+
+1. **Register-existence `#ifdef`** (preferred): Guard on whether the SFR actually exists. The compiler knows which registers the target chip has. Example from `pps.c`:
+```c
+#ifdef PPS_NCO3    // NCO3 output exists on this chip?
+void pps_out_NCO3(pps_output_t *pin) { *pin = PPS_NCO3; }
+#endif
+```
+No chance of calling a function for a peripheral that doesn't exist. The compiler is the source of truth. Also used in `ports.c` (`#ifdef LATD`).
+
+2. **`FAMILY_*` conditionals**: Guard on chip family when the register exists but has different values/behavior. Example from `nonvolatile_memory.h`:
+```c
+#if FAMILY_K42 || FAMILY_Q41 || FAMILY_Q43 || FAMILY_Q84
+    #define FLASH_ERASE_BLOCKSIZE _FLASH_ERASE_SIZE    // already in bytes
+#else
+    #define FLASH_ERASE_BLOCKSIZE _FLASH_ERASE_SIZE * 2 // words-to-bytes
+#endif
+```
+Needed when the same register name means different things on different families.
+
+Rule of thumb: if the register simply doesn't exist on some chips, use `#ifdef REGISTER_NAME`. If it exists but behaves differently or has different values, use `FAMILY_*`. These aren't interchangeable — existence and behavior are separate concerns. PPS uses both: `#ifdef` in `pps.c` for function existence, `FAMILY_*` in `pps_values.h` for register values.
+
 ## ADC and FVR
 
 The ADC driver is fundamentally an FVR consumer. `adc_init()` enables the FVR immediately. `adc_scale_t` isn't an abstract scale — `_1024mV`/`_2048mV`/`_4096mV` map 1:1 to FVR gain settings, and `_5000mV` means VDD reference. `adc_select_scale()` literally calls `fvr_set_adc_buffer_gain()` at runtime.
@@ -96,13 +120,17 @@ These libs were built for K42 first. Q41/Q43 support added incrementally. Untest
 
 **High:**
 - `numerically_controlled_oscillator.h`: NCO2/NCO3 functions declared unconditionally — Q41 only has NCO1
-- `pmd.h`: `pmd_module` enum includes ~30 peripherals that don't exist on Q41 (CWG2/3, NCO2/3, PWM2/3, CCP2/3, UART4/5, SPI2, CLC5-8, DMA2-6)
 
 **Medium:**
 - `signal_measurement_timer.h`: `smt_window_input` enum shared across families, includes Q41-absent peripherals (CLC5-8, PWM5-8, CCP4, CMP2)
 - `timer_constants.h`: Q41 grouped with Q43/Q84 for Timer1/2 clock sources — gets invalid entries (CLC5-8, NCO2/3, TU16A/B). Needs own branch
 - `clc.h`: Q41 in `#else` branch with K42. Some macros reference Q41-absent peripherals (CWG3, PWM8)
-- `pps.h`: Q41-absent PPS functions have comment annotations but no compile-time guards
+
+**Not actually gaps:**
+- `pmd.h/c`: Enum includes Q41-absent peripherals but `pmd_set()` is `// TODO` on Q41 — harmless, no one uses PMD
+- `pps.c`: Uses `#ifdef` on register names (e.g. `#ifdef PPS_NCO3`), not FAMILY_*. Compiler is the source of truth — functions for absent peripherals simply don't compile in. Smart approach.
+- `device_information.c`: Has K42 vs `#else` address guards for DIA/DCI. Looked risky from header but implementation is correct.
+- `ports.c`: Uses `#ifdef LATD`/`TRISD` etc. — same register-existence approach as pps.c
 
 **Fixed:**
 - `nonvolatile_memory.h`: `FLASH_ERASE_BLOCKSIZE` was wrong for Q41 (fixed — added Q41 to K42 branch)
