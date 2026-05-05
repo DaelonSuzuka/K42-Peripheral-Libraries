@@ -112,7 +112,15 @@ The ADC driver is fundamentally an FVR consumer. `adc_init()` enables the FVR im
 
 `adc_read()` does auto-ranging: starts at 4X FVR gain, drops gain if reading is too low (better resolution), bumps to VDD reference if too high (wider range). Per channel, per reading. The FVR isn't "coupled" to the ADC — it IS the ADC's reference strategy.
 
-## SPI
+## CLC (Configurable Logic Cell)
+
+Programmable logic block — a tiny CPLD fabric on the PIC. 4 selectable data inputs, 4 configurable gates (AND/OR/XOR etc.), polarity control, PPS-routed output. Runs entirely in hardware: configure once, runs autonomously, no CPU.
+
+The "passthrough" init is a hardware signal router: feed a signal in (e.g. UART TX), 4-input AND with all inputs tied together passes it through, output routes via PPS. Connects peripherals to pins (or peripherals to peripherals) without CPU involvement.
+
+**K42 vs Q43/Q41 register interface:** Same logical operation, different access pattern. K42 has dedicated per-CLC registers (`CLC1SEL0`, `CLC2CONbits`). Q43/Q41 uses a shared register set — set `CLCSELECT` to pick which CLC, then write to generic `CLCnSEL0`, `CLCnCONbits`. The wrappers hide this difference.
+
+**Typo:** `clc_passthrought_init()` — consistent in both declaration and definition. Named by the author so all callers use the same spelling. Works fine. Fixing would be a shared-path change affecting all projects.
 
 `spi.c` is a half-implementation. Only send-only (shift register) use has been tested. `spi1_exchange_block()` has blocking busy-wait loops — would need ISR + buffer architecture (like UART) for true bidirectional use. The prehook/posthook device pattern works well for device-specific setup/teardown. The device registry (`spi1_register_device()`) returns an ID for use with `spi1_exchange_block()`.
 
