@@ -2,6 +2,10 @@
 
 Index of documentation for the peripherals module.
 
+## Entry Point
+
+- [quickstart.md](quickstart.md) - Load first when working with the peripherals submodule
+
 ## Core Files
 
 - [summary.md](summary.md) - Module overview and design patterns
@@ -12,16 +16,16 @@ Index of documentation for the peripherals module.
 - [uart.md](uart.md) - UART driver abstraction with dependency injection
 - [pps.md](pps.md) - Peripheral Pin Select system
 
-## Additional Peripherals (undocumented)
+## Undocumented Drivers
 
-The module also includes drivers for:
 - ADC - Analog-to-digital converter
 - SPI - Serial Peripheral Interface master
 - Timer - Hardware timers
 - NCO - Numerically Controlled Oscillator
 - SMT - Signal Measurement Timer
 - CLC - Configurable Logic Cell
-- And more...
+- FVR - Fixed Voltage Reference
+- HLVD - High/Low Voltage Detect
 
 ---
 
