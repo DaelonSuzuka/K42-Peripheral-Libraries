@@ -3,27 +3,31 @@
 
 /* ************************************************************************** */
 
-void external_oscillator_init(void) {
-    OSCCON1bits.NOSC = 0b111; // NOSC EXTOSC
-    OSCFRQ = 0x08;            // HFFRQ 64_MHz;
-}
+void oscillator_init(osc_settings_t settings) {
+    OSCCON1bits.NOSC = settings.source;
+    OSCCON1bits.NDIV = settings.divider;
 
-void internal_oscillator_init(void) {
-    OSCCON1 = 0x60; // NOSC HFINTOSC; NDIV 1;
     OSCCON3 = 0x00; // CSWHOLD may proceed; SOSCPWR Low power;
     OSCEN = 0x00;   // MFOEN disabled; LFOEN disabled; ADOEN disabled;
                     // SOSCEN disabled; EXTOEN disabled; HFOEN disabled;
-    OSCFRQ = 0x08;  // HFFRQ 64_MHz;
+    OSCFRQ = settings.freq;
     OSCTUNE = 0x00; // TUN 0;
 }
 
-/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
 
+void internal_oscillator_init(void) {
+    osc_settings_t settings = {0};
+    settings.source  = HFINTOSC;
+    settings.freq    = _64_Mhz;
+    settings.divider = _by_1;
+    oscillator_init(settings);
+}
 
-void oscillator_init(osc_settings_t settings){
-    OSCCON1bits.NOSC = settings.source;
-    OSCCON1bits.NDIV = _by_1;
-
-    OSCFRQ = settings.freq;
-
+void external_oscillator_init(void) {
+    osc_settings_t settings = {0};
+    settings.source  = EXTOSC;
+    settings.freq    = _64_Mhz;
+    settings.divider = _by_1;
+    oscillator_init(settings);
 }
