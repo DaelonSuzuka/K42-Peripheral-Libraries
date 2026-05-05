@@ -116,7 +116,7 @@ The ADC driver is fundamentally an FVR consumer. `adc_init()` enables the FVR im
 
 Programmable logic block — a tiny CPLD fabric on the PIC. 4 selectable data inputs, 4 configurable gates (AND/OR/XOR etc.), polarity control, PPS-routed output. Runs entirely in hardware: configure once, runs autonomously, no CPU.
 
-The "passthrough" init is a hardware signal router: feed a signal in (e.g. UART TX), 4-input AND with all inputs tied together passes it through, output routes via PPS. Connects peripherals to pins (or peripherals to peripherals) without CPU involvement.
+The "passthrough" init is a PPS routing workaround. The PPS output matrix doesn't include every peripheral output — some internal signals can't be routed to pins directly. But CLC inputs can accept those internal signals, and CLC outputs ARE in the PPS matrix. The passthrough bridges the gap: internal peripheral → CLC input → CLC output → PPS → pin. The 4-input AND with all inputs tied together is just the simplest way to pass the signal through unchanged.
 
 **K42 vs Q43/Q41 register interface:** Same logical operation, different access pattern. K42 has dedicated per-CLC registers (`CLC1SEL0`, `CLC2CONbits`). Q43/Q41 uses a shared register set — set `CLCSELECT` to pick which CLC, then write to generic `CLCnSEL0`, `CLCnCONbits`. The wrappers hide this difference.
 
