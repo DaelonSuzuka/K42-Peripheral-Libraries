@@ -42,12 +42,12 @@ extern void internal_eeprom_write(NVM_address_t address, uint8_t data);
 
 #define FLASH_SIZE _ROMSIZE
 
-// _FLASH_ERASE_SIZE is compiler-defined as the erase row size, in words
-#if FAMILY_K42
+// _FLASH_ERASE_SIZE is compiler-defined as the erase row size in bytes (XC8 v2+)
+// Older XC8 defined this in words, requiring * 2 for byte conversion
+#if FAMILY_K42 || FAMILY_Q41 || FAMILY_Q43 || FAMILY_Q84
     #define FLASH_ERASE_BLOCKSIZE _FLASH_ERASE_SIZE
 #else
     #define FLASH_ERASE_BLOCKSIZE _FLASH_ERASE_SIZE * 2
-
 #endif
 // _FLASH_WRITE_SIZE is compiler-defined as the write row size, in words
 #define FLASH_WRITE_BLOCKSIZE _FLASH_WRITE_SIZE
