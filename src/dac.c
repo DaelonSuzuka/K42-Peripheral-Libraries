@@ -1,4 +1,5 @@
 #include "dac.h"
+#include "interrupt.h"
 #include "pic_header.h"
 
 /* ************************************************************************** */
@@ -41,7 +42,11 @@ void vdac_init(void) {
 void vdac_write(uint16_t value) {
     if (value > VDAC_MAX)
         value = VDAC_MAX;
+    // 16-bit store is two byte writes on PIC18; the service ISR must not
+    // fire between them or it outputs a torn value
+    begin_critical_section();
     vdac_value = value;
+    end_critical_section();
 }
 
 uint16_t vdac_read(void) {
@@ -49,7 +54,7 @@ uint16_t vdac_read(void) {
 }
 
 void vdac_service(void) {
-    uint16_t val = vdac_value;         // Atomic read of 16-bit target
+    uint16_t val = vdac_value;         // Coherent: writer brackets its store with a critical section
     uint8_t integer_part = val >> 4;   // 0–255
     uint8_t frac_part = val & 0x0F;    // 0–15
 
