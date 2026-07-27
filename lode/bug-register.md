@@ -5,10 +5,15 @@ fixing (moved to Resolved) so the analysis travels with the code.
 
 ## Open
 
-- **uart_impl.h RX ISR error handling**: only parity (`PERIF`) is handled;
-  framing (`FERIF`) and RX FIFO overflow flags are ignored. Believed benign on
-  the K42/Q41-family UART (unlike the old RCSTA parts, it does not hard-lock on
-  overrun), but unverified on the bench.
+- **uart_impl.h RX ISR error handling**: only parity (`PERIF`) is handled.
+  Verified benign for overrun (2026-07-27, datasheet lode `pic18f16q41/uart.md`):
+  the 2-byte RX FIFO **discards the incoming byte** on overflow and keeps
+  receiving — no RCSTA/OERR-style lockup on this UART generation, and matches
+  the ring buffer's drop-newest policy. `FERIE`/`PERIE` would suppress `RXIF`
+  when their flags are set, but the driver never enables them. Residual gap:
+  `FERIF` is unchecked, so a framing-errored byte (line noise) is delivered to
+  the ring as data — downstream parsers must tolerate a garbage byte, which the
+  preamble-hunting CI-V parser does.
 - **uart_impl.h baud table assumes 64 MHz FOSC**: `baudTable[]` values are only
   correct at 64 MHz HFINTOSC with BRGS=1. No compile-time guard. Same class as
   the `delay_us()` clock dependency noted in project roadmaps.
