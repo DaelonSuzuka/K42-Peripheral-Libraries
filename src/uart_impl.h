@@ -1,5 +1,4 @@
 #include "interrupt.h"
-#include "os/system_time.h"
 #include "peripherals/pps.h"
 #include "pic_header.h"
 #include "uart.h"
@@ -7,7 +6,10 @@
 
 /* ************************************************************************** */
 
-static uart_config_t *_config;
+// Driver-owned copy of the caller's config. Storing the caller's pointer is a
+// use-after-overlay hazard: init-function locals live in compiled-stack memory
+// that the linker reassigns to other functions' locals after init returns.
+static uart_config_t _config;
 
 /* ************************************************************************** */
 
@@ -33,9 +35,10 @@ void LONG(_tx_string)(const char *string, const char terminator) {
 
     // loop until hitting the provided termination character
     while (string[currentByte] != terminator) {
+        // spin: the TX ISR drains at line rate, so this wait is one
+        // byte-time at the configured baud
         while (tx_buffer_is_full()) {
             SHORT(TXIE) = 1;
-            delay_ms(20);
         }
 
         begin_critical_section();
@@ -49,7 +52,6 @@ void LONG(_tx_string)(const char *string, const char terminator) {
 void LONG(_tx_char)(char data) {
     while (tx_buffer_is_full()) {
         SHORT(TXIE) = 1;
-        delay_ms(20);
     }
 
     begin_critical_section();
@@ -97,17 +99,17 @@ uint8_t LONG(_rx_available)(void) {
 
 void LONG(_tx_set_address)(uint16_t address) {
     SHORT(P1) = address;
-    _config->tx_address = address;
+    _config.tx_address = address;
 }
 
 void LONG(_rx_set_address)(uint16_t address) {
     SHORT(P2) = address;
-    _config->rx_address = address;
+    _config.rx_address = address;
 }
 
 void LONG(_rx_set_address_mask)(uint16_t mask) {
     SHORT(P3) = mask;
-    _config->rx_address_mask = mask;
+    _config.rx_address_mask = mask;
 }
 
 /* ************************************************************************** */
@@ -116,7 +118,7 @@ static uart_interface_t LONG(_create)(void) {
     uart_interface_t interface;
 
     // copy the config into the interface struct
-    interface.config = _config;
+    interface.config = &_config;
 
     // set up the interface itself
     interface.tx_string = LONG(_tx_string);
@@ -159,11 +161,11 @@ static void LONG(_baud_select)(baud_rate_t baudRate) {
 
 static void LONG(_pps_init)(void) {
     // Only set the PPS pins if the user has actually supplied a value
-    if (_config->txPin) {
-        JOIN(JOIN(pps_out_UART, UARTX), _TX)(_config->txPin);
+    if (_config.txPin) {
+        JOIN(JOIN(pps_out_UART, UARTX), _TX)(_config.txPin);
     }
-    if (_config->rxPin) {
-        JOIN(JOIN(pps_in_UART, UARTX), _RX)(_config->rxPin);
+    if (_config.rxPin) {
+        JOIN(JOIN(pps_in_UART, UARTX), _RX)(_config.rxPin);
     }
 }
 
@@ -172,35 +174,35 @@ static char default_tx_buffer[DEFAULT_BUFFER_SIZE];
 static char default_rx_buffer[DEFAULT_BUFFER_SIZE];
 
 uart_interface_t LONG(_init)(uart_config_t *config) {
-    _config = config;
+    _config = *config;
 
-    LONG(_baud_select)(_config->baud);
+    LONG(_baud_select)(_config.baud);
     LONG(_pps_init)();
 
-    if (!_config->tx_buffer || _config->tx_buffer_size < DEFAULT_BUFFER_SIZE) {
-        _config->tx_buffer = default_tx_buffer;
-        _config->tx_buffer_size = DEFAULT_BUFFER_SIZE;
+    if (!_config.tx_buffer || _config.tx_buffer_size < DEFAULT_BUFFER_SIZE) {
+        _config.tx_buffer = default_tx_buffer;
+        _config.tx_buffer_size = DEFAULT_BUFFER_SIZE;
     }
-    tx_buffer_init(_config->tx_buffer, _config->tx_buffer_size);
-    if (!_config->rx_buffer || _config->rx_buffer_size < DEFAULT_BUFFER_SIZE) {
-        _config->rx_buffer = default_rx_buffer;
-        _config->rx_buffer_size = DEFAULT_BUFFER_SIZE;
+    tx_buffer_init(_config.tx_buffer, _config.tx_buffer_size);
+    if (!_config.rx_buffer || _config.rx_buffer_size < DEFAULT_BUFFER_SIZE) {
+        _config.rx_buffer = default_rx_buffer;
+        _config.rx_buffer_size = DEFAULT_BUFFER_SIZE;
     }
-    rx_buffer_init(_config->rx_buffer, _config->rx_buffer_size);
+    rx_buffer_init(_config.rx_buffer, _config.rx_buffer_size);
 
     SHORT(CON0bits).BRGS = 1; // Baud Rate is set to high speed
-    if (_config->txPin) {
+    if (_config.txPin) {
         SHORT(CON0bits).TXEN = 1; // Transmit is enabled
     }
-    if (_config->rxPin) {
+    if (_config.rxPin) {
         SHORT(CON0bits).RXEN = 1; // Recieve is enabled
     }
-    SHORT(CON0bits).MODE = _config->mode;
-    if (_config->mode == UART_MODE_ASYNC_9BIT_ADDRESS) {
+    SHORT(CON0bits).MODE = _config.mode;
+    if (_config.mode == UART_MODE_ASYNC_9BIT_ADDRESS) {
         LONG(_rx_set_address_mask)(0xff);
     }
 
-    if (_config->rxPin) {
+    if (_config.rxPin) {
         SHORT(RXIE) = 1; // Enable UART Recieve Interrupt
     }
 

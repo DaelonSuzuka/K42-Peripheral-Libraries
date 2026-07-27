@@ -81,17 +81,24 @@ static bool rx_buffer_is_empty(void) {
     return (rx_buffer.head == rx_buffer.tail); //
 }
 
-// static bool rx_buffer_is_full(void) {
-//     uint8_t head = rx_buffer.head + 1;
+static bool rx_buffer_is_full(void) {
+    uint8_t head = rx_buffer.head + 1;
 
-//     if (head == rx_buffer.size) {
-//         head = 0;
-//     }
+    if (head == rx_buffer.size) {
+        head = 0;
+    }
 
-//     return (head == rx_buffer.tail);
-// }
+    return (head == rx_buffer.tail);
+}
 
 static void rx_buffer_write(char data) {
+    // ISR side: drop the incoming byte when full. One lost byte beats head
+    // catching tail, which reads back as an empty buffer and loses everything.
+    // A blocking full-check here would deadlock — nothing can drain during the ISR.
+    if (rx_buffer_is_full()) {
+        return;
+    }
+
     rx_buffer.contents[rx_buffer.head++] = data;
 
     if (rx_buffer.head == rx_buffer.size) {

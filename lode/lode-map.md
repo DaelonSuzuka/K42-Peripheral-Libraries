@@ -5,6 +5,7 @@ Index of documentation for the peripherals module.
 ## Entry Point
 
 - [quickstart.md](quickstart.md) - Load first when working with the peripherals submodule
+- [bug-register.md](bug-register.md) - Known defects, latent hazards, and resolutions
 
 ## Core Files
 

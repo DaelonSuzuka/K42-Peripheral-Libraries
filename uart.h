@@ -121,7 +121,7 @@ typedef struct {
 } uart_interface_t;
 
 #define EMPTY_UART_INTERFACE(name)                                             \
-    static uart_interface_t uart = {                                           \
+    static uart_interface_t name = {                                           \
         dummy_tx_string,           dummy_tx_char,        dummy_rx_char,        \
         dummy_rx_available,        dummy_tx_set_address, dummy_rx_set_address, \
         dummy_rx_set_address_mask,                                             \
